@@ -100,8 +100,5 @@ class Genome:
     def _mutate_link_toggle(self):
         pass
 
-    def _get_random_connect(self):
-        pass
-
-    def _get_random_node(self):
+    def _get_random_gene(self):
         pass
