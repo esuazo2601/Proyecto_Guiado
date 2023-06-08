@@ -43,7 +43,7 @@ class NEAT:
             n.y = (i + 1) / (self.output_size + 1)
 
     def _get_connection(self, connection: ConnectionGene):
-        c = ConnectionGene(connection.from_node, connection.to_node)
+        c = ConnectionGene(connection.in_node, connection.out_node)
         c.innovation_number = connection.innovation_number
         c.weight = connection.weight
         c.enabled = connection.enabled

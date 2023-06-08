@@ -5,3 +5,4 @@ class NodeGene(Gene):
         super().__init__(innovation_number)
         self.x = x
         self.y = y
+        self.type: str
