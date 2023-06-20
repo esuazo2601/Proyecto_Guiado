@@ -1,9 +1,10 @@
 from gene import Gene
+from node_gene import NodeGene
 
 class ConnectionGene(Gene):
-    def __init__(self, in_node, out_node, innov):
-        self.in_node: int = in_node
-        self.out_node: int = out_node
-        self.innovation: int = innov
-        self.weight: float
-        self.enabled: bool
+    def __init__(self, in_node: NodeGene, out_node: NodeGene, weight: float, innov: int):
+        self.in_node = in_node
+        self.out_node = out_node
+        self.weight = weight
+        self.enabled: bool = True
+        self.innovation = innov
