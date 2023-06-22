@@ -8,7 +8,7 @@ import random
 class Genome:
 
     def __init__(self):
-
+        # PENDIENTE: reemplazar listas por diccionarios
         self.connections: list[ConnectionGene] = []
         self.nodes: list[NodeGene] = []
         self.innovation: int = 1
@@ -73,7 +73,8 @@ class Genome:
         genome1 = self
         # crear nuevo genoma
         child = Genome()
-        # asumir que padre 1 es mas apto
+        # asumir que padre 1 es el mas apto.
+        # PENDIENTE: elegir realmente el padre mas apto
         # usar los genes del padre mas apto
         for node in genome1.nodes:
             child.nodes.append(node)
@@ -87,15 +88,14 @@ class Genome:
 
         for conn in genome1.connections:
             if conn.innovation in innovs.keys():
-                child.connections.append(random.choice(
-                    [conn, innovs[conn.innovation]]))
-            # si no son matching genes, dejar los genes del padre
+                selected = random.choice([conn, innovs[conn.innovation]])
+                child.connections.append(selected.copy())
+            # si no son matching genes, dejar los genes del padre mas apto
             else:
-                child.connections.append(conn)
+                child.connections.append(conn.copy())
 
     # There was a 75% chance that an inherited gene was disabled if it was disabled in either parent.
     # In each generation, 25% of offspring resulted from mutation without crossover
-
     def _mutate(self):
         pass
 
@@ -140,17 +140,22 @@ class Genome:
     # There was an 80% chance of a genome having its connection weights mutated,
     # in which case each weight had a 90% chance of being uniformly perturbed
     # and a 10% chance of being assigned a new random value.
-
     def _mutate_weight_shift(self):
-        pass
-
-    def _mutate_weight_random(self):
-        pass
+        uniform = random.choices((True, False), weights=(90, 10), k=1)[0]
+        if uniform:
+            for conn in self.connections:
+                perturbation = random.randrange(0.5, 1.5, 0.1)
+                conn.weight *= perturbation
+        else:
+            for conn in self.connections:
+                conn.weight = random.random()
+                
 
     # There was a 75% chance that an inherited gene was disabled if it was disabled
     # in either parent. In each generation, 25% of offspring resulted from mutation without crossover
     def _mutate_link_toggle(self):
-        pass
+        connection: ConnectionGene = random.choice(self.connections)
+        connection.enabled = not connection.enabled
 
     def _get_random_gene(self):
-        pass
+        return random.choice(self.connections)

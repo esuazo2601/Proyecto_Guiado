@@ -1,6 +1,7 @@
 from connection_gene import ConnectionGene
 from node_gene import NodeGene
 from genome import Genome
+import pickle
 
 class NEAT:
     def __init__(self, inputSize, outputSize, clients):
@@ -66,3 +67,7 @@ class NEAT:
         n = NodeGene(len(self.all_nodes) + 1)
         self.all_nodes.append(n)
         return n
+    
+    # serializar red en un archivo .pickle
+    def _serialize(self):
+        pass
