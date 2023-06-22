@@ -6,9 +6,8 @@ import random
 
 
 class Genome:
-    
-    def __init__(self, neat: NEAT):
-        self.neat = neat
+
+    def __init__(self):
 
         self.connections: list[ConnectionGene] = []
         self.nodes: list[NodeGene] = []
@@ -63,18 +62,40 @@ class Genome:
 
         weight_difference /= similar_genes
         excess_genes = len(genome1.connections) - genome1_index
-        
+
         # N can be set to 1 if both genomes are small, i.e., consist of fewer than 20 gene
         N = max(len(genome1.connections), len(genome2.connections))
         N = 1 if N < 20 else N
 
         return self.neat.C1 * (disjoint_genes/N) + self.neat.C2 * (excess_genes/N) + self.neat.C3 * weight_difference
 
-    def _cross_over(self, genome1, genome2):
-        pass
+    def _cross_over(self, genome2: Self):
+        genome1 = self
+        # crear nuevo genoma
+        child = Genome()
+        # asumir que padre 1 es mas apto
+        # usar los genes del padre mas apto
+        for node in genome1.nodes:
+            child.nodes.append(node)
+
+        # elegir al azar los matching genes
+        # por cada nodo que esta en el padre 1 y padre 2, elegir al azar
+        # innovs = [x.innovation for x in genome2.connections]
+        innovs = {}
+        for x in genome2.connections:
+            innovs[x.innovation] = x
+
+        for conn in genome1.connections:
+            if conn.innovation in innovs.keys():
+                child.connections.append(random.choice(
+                    [conn, innovs[conn.innovation]]))
+            # si no son matching genes, dejar los genes del padre
+            else:
+                child.connections.append(conn)
 
     # There was a 75% chance that an inherited gene was disabled if it was disabled in either parent.
     # In each generation, 25% of offspring resulted from mutation without crossover
+
     def _mutate(self):
         pass
 
@@ -84,14 +105,15 @@ class Genome:
         in_node = random.choice(self.nodes)
         out_node = random.choice(self.nodes)
         conns = [(x.in_node, x.out_node) for x in self.connections]
-        
+
         # si la conexion ya existe, elegir nuevos nodos al azar
         while (in_node, out_node) in conns or (out_node, in_node) in conns:
             in_node = random.choice(self.nodes)
             out_node = random.choice(self.nodes)
-        
+
         # crear conexion y agregarla a la lista de conecciones
-        new_connection = ConnectionGene(in_node, out_node, random.random(), self.innovation)
+        new_connection = ConnectionGene(
+            in_node, out_node, random.random(), self.innovation)
         self.innovation += 1
         self.connections.append(new_connection)
 
@@ -103,20 +125,22 @@ class Genome:
         conn = random.choice(self.connections)
         new_node = NodeGene(len(self.nodes), "HIDDEN")
         conn.enabled = False
-        
-        new_connection1 = ConnectionGene(conn.in_node, new_node, 1, self.innovation)
+
+        new_connection1 = ConnectionGene(
+            conn.in_node, new_node, 1, self.innovation)
         self.innovation += 1
-        new_connection2 = ConnectionGene(new_node, conn.out_node, conn.weight, self.innovation)
+        new_connection2 = ConnectionGene(
+            new_node, conn.out_node, conn.weight, self.innovation)
         self.innovation += 1
-        
+
         self.connections.append(new_connection1)
         self.connections.append(new_connection2)
         self.nodes.append(new_node)
-        
 
     # There was an 80% chance of a genome having its connection weights mutated,
     # in which case each weight had a 90% chance of being uniformly perturbed
     # and a 10% chance of being assigned a new random value.
+
     def _mutate_weight_shift(self):
         pass
 

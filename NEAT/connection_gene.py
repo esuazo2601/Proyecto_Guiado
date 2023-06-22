@@ -8,3 +8,6 @@ class ConnectionGene(Gene):
         self.weight = weight
         self.enabled: bool = True
         self.innovation = innov
+    
+    def copy(self):
+        return ConnectionGene(self.in_node, self.out_node, self.weight, self.innovation)
