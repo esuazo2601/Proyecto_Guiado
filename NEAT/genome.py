@@ -7,11 +7,30 @@ import random
 
 
 class Genome:
-    def __init__(self):
+    def __init__(self, inputSize, outputSize):
         # PENDIENTE: reemplazar listas por diccionarios
         self.connections: list[ConnectionGene] = []
         self.nodes: list[NodeGene] = []
-        self.innovation: int = 1
+        
+        inputN : list[NodeGene] = []
+        outputN : list[NodeGene] = []
+
+        for i in range(0, inputSize):
+            n = NodeGene(i+1, "INPUT")
+            inputN.append(n)
+            self.nodes.append(n)
+
+        for i in range(inputSize, inputSize+outputSize):
+            n = NodeGene(i+1, "OUTPUT")
+            outputN.append(n)
+            self.nodes.append(n)
+
+        num = 1
+        for in_node in inputN:
+            for out_node in outputN:
+                conn = ConnectionGene(in_node, out_node, random.random(), num)
+                self.connections.append(conn)
+                num = num + 1
 
     def _distance(self, genome2: Self):
         genome1 = self

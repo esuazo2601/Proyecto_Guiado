@@ -4,44 +4,23 @@ from genome import Genome
 import pickle
 
 class NEAT:
-    def __init__(self, inputSize, outputSize, clients):
-        self.input_size: int
-        self.output_size: int
-        self.max_clients: int
+    def __init__(self, inputSize, outputSize, populationSize, C1, C2, C3):
+        self.input_size: int = inputSize            # Cantidad de nodos de entrada
+        self.output_size: int   = outputSize        # Cantidad de nodos de salida
+        self.population_size: int = populationSize  # Cantidad maxima de genomas por generacion
 
-        self.all_connections: list[ConnectionGene]
-        self.all_nodes: list[NodeGene]
+        self.genomes: list[Genome] = []             # Lista de Genomas
+        for i in range(0, populationSize):          # Itera hasta llenar la lista con la poblacion de genomas
+            g = Genome(inputSize, outputSize)       # Crea un genoma nuevo
+            self.genomes.append(g)                  # Agrega el genoma al listado
 
-        self.C1: float
-        self.C2: float
-        self.C3: float
+        self.C1: float  = C1                        # Valor C1 para calcular fitness
+        self.C2: float = C2                         # Valor C2 para calcular fitness
+        self.C3: float = C3                         # Valor C3 para calcular fitness
 
-        self._reset(self.input_size, self.output_size, self.max_clients)
-
-    def _empty_genome(self):
-        g = Genome(self)
-        for i in range(self.input_size + self.output_size):
-            g.nodes.append(self._get_node(i + 1))
-        
-        return g
-
-    def _reset(self, input_size, output_size, max_clients):
-        self.input_size = input_size
-        self.output_size = output_size
-        self.max_clients = max_clients
-
-        self.all_connections.clear()
-        self.all_nodes.clear()
-
-        for i in range(self.input_size):
-            n: NodeGene = self._get_node()
-            n.x = 0.1
-            n.y = (i + 1) / (self.input_size + 1)
-
-        for i in range(self.output_size):
-            n: NodeGene = self._get_node()
-            n.x = 0.9
-            n.y = (i + 1) / (self.output_size + 1)
+    # Cargar red desde un archivo .pickle
+    def load(self, inputSize, outputSize, populationSize, C1, C2, C3):
+        pass
 
     def _get_connection(self, connection: ConnectionGene):
         c = ConnectionGene(connection.in_node, connection.out_node)
@@ -68,6 +47,14 @@ class NEAT:
         self.all_nodes.append(n)
         return n
     
+    def evaluate(self):
+        pass
+        for network in self.genomes:        # Evaluar cada genoma
+            pass
+
     # serializar red en un archivo .pickle
     def _serialize(self):
+        pass
+
+    def evaluateGenome(self):
         pass
