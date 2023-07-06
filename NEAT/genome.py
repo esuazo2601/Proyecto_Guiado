@@ -2,11 +2,11 @@ from .neat import NEAT
 from connection_gene import ConnectionGene
 from node_gene import NodeGene
 from typing import Self
+from innovation import Innovation
 import random
 
 
 class Genome:
-
     def __init__(self):
         # PENDIENTE: reemplazar listas por diccionarios
         self.connections: list[ConnectionGene] = []
@@ -88,11 +88,14 @@ class Genome:
 
         for conn in genome1.connections:
             if conn.innovation in innovs.keys():
+                # elegir al azar entre la conexion del padre1 y padre2
                 selected = random.choice([conn, innovs[conn.innovation]])
                 child.connections.append(selected.copy())
             # si no son matching genes, dejar los genes del padre mas apto
             else:
                 child.connections.append(conn.copy())
+
+        return child
 
     # There was a 75% chance that an inherited gene was disabled if it was disabled in either parent.
     # In each generation, 25% of offspring resulted from mutation without crossover
@@ -144,15 +147,15 @@ class Genome:
         uniform = random.choices((True, False), weights=(90, 10), k=1)[0]
         if uniform:
             for conn in self.connections:
-                perturbation = random.randrange(0.5, 1.5, 0.1)
+                perturbation = random.randrange(-2.0, 2.0, 0.01)
                 conn.weight *= perturbation
         else:
             for conn in self.connections:
                 conn.weight = random.random()
-                
 
     # There was a 75% chance that an inherited gene was disabled if it was disabled
     # in either parent. In each generation, 25% of offspring resulted from mutation without crossover
+
     def _mutate_link_toggle(self):
         connection: ConnectionGene = random.choice(self.connections)
         connection.enabled = not connection.enabled
