@@ -54,3 +54,10 @@ class ConnectionGenes(NodeGenes):
     def mutate_add_connection(self, node1: NodeGenes, node2: NodeGenes, inn_num: int):
         new_conn = Connection(node1, node2, random.random(), inn_num)   # TODO: implementar innovation_number
         self.genes.append(new_conn)
+
+    """ 
+    Cambia el valor del Peso de una Conexion, resultando en lo siguiente:
+    - La Conexion actualiza el valor de su Peso basada en lo que recibe
+    """
+    def mutate_weight(self, new_weight: float, conn: Connection):
+        self.genes[conn.Innovation].mutate_weight(new_weight)           # TODO: implementar correctamente esto ←
