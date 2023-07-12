@@ -1,6 +1,6 @@
 from genes import Genes
 
-class NodeGenes(Genes):
+class NodeGenes():
     def __init__(self, inputSize, outputSize):
         self.genes = list[Genes] = {}
 
@@ -17,5 +17,5 @@ class NodeGenes(Genes):
             outputN.append(n)
             self.genes.append(n)
 
-    def addGenes():
-        pass
+    def add_node(self, node: Genes):
+        self.genes.append(node)
