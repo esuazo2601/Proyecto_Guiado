@@ -1,40 +1,16 @@
 from .neat import NEAT
-from connection_gene import ConnectionGene
-from node_gene import NodeGene
-from typing import Self
+from connection_genes import ConnectionGenes, Connection
+from node_genes import NodeGenes
 from innovation import Innovation
 import random
 
 
 class Genome:
     def __init__(self, inputSize, outputSize):
-        # PENDIENTE: reemplazar listas por diccionarios
-        self.connections: list[ConnectionGene] = []
-        self.nodes: list[NodeGene] = []
-        
-        inputN : list[NodeGene] = []
-        outputN : list[NodeGene] = []
+        self.nodes: NodeGenes = NodeGenes(inputSize, outputSize)
+        self.connections: ConnectionGenes = ConnectionGenes(self.nodes)
 
-        for i in range(0, inputSize):
-            n = NodeGene(i+1, "INPUT")
-            inputN.append(n)
-            self.nodes.append(n)
-
-        for i in range(inputSize, inputSize+outputSize):
-            n = NodeGene(i+1, "OUTPUT")
-            outputN.append(n)
-            self.nodes.append(n)
-
-        num = 1
-        for in_node in inputN:
-            for out_node in outputN:
-                conn = ConnectionGene(in_node, out_node, random.random(), num)
-                self.connections.append(conn)
-                num = num + 1
-
-    def _distance(self, genome2: Self):
-        genome1 = self
-
+    def _distance(genome1, genome2):
         highest_innovation_gene_1: int = 0
         if len(genome1.connections) != 1:
             genome1.connections.sort(key=lambda x: x.innovation)
@@ -86,10 +62,9 @@ class Genome:
         N = max(len(genome1.connections), len(genome2.connections))
         N = 1 if N < 20 else N
 
-        return self.neat.C1 * (disjoint_genes/N) + self.neat.C2 * (excess_genes/N) + self.neat.C3 * weight_difference
+        return genome1.neat.C1 * (disjoint_genes/N) + genome1.neat.C2 * (excess_genes/N) + genome1.neat.C3 * weight_difference
 
-    def _cross_over(self, genome2: Self):
-        genome1 = self
+    def _cross_over(genome1, genome2):
         # crear nuevo genoma
         child = Genome()
         # asumir que padre 1 es el mas apto.
@@ -119,7 +94,11 @@ class Genome:
     # There was a 75% chance that an inherited gene was disabled if it was disabled in either parent.
     # In each generation, 25% of offspring resulted from mutation without crossover
     def _mutate(self):
-        pass
+        chances = random.random()
+        if chances > .25:
+            pass
+        else:
+            pass
 
     # a single new connection gene with a random weight is added connecting two previously unconnected nodes
     def _mutate_link(self):
@@ -129,12 +108,12 @@ class Genome:
         conns = [(x.in_node, x.out_node) for x in self.connections]
 
         # si la conexion ya existe, elegir nuevos nodos al azar
-        while (in_node, out_node) in conns or (out_node, in_node) in conns:
+        while (in_node, out_node) in conns or (out_node, in_node) in conns:     #! Podría quedar atrapado en el loop
             in_node = random.choice(self.nodes)
             out_node = random.choice(self.nodes)
 
         # crear conexion y agregarla a la lista de conecciones
-        new_connection = ConnectionGene(
+        new_connection = ConnectionGenes(
             in_node, out_node, random.random(), self.innovation)
         self.innovation += 1
         self.connections.append(new_connection)
