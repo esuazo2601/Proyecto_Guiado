@@ -1,5 +1,5 @@
 import os
-from connection_genes import ConnectionGenes
+from connection_genes import ConnectionGenes, Connection
 from node_genes import NodeGenes
 from genome import Genome
 import pickle
@@ -20,10 +20,7 @@ class NEAT:
         self.C2: float = C2                         # Valor C2 para calcular fitness
         self.C3: float = C3                         # Valor C3 para calcular fitness
 
-    def speciation(self):
-        pass
-
-    def _distance(genome1: Genome, genome2: Genome):
+    def distance(genome1: Genome, genome2: Genome):             # TODO: Revisar implementacion
         highest_innovation_gene_1: int = 0
         if len(genome1.connections) != 1:
             genome1.connections.sort(key=lambda x: x.innovation)
@@ -77,44 +74,71 @@ class NEAT:
 
         return genome1.neat.C1 * (disjoint_genes/N) + genome1.neat.C2 * (excess_genes/N) + genome1.neat.C3 * weight_difference
 
-    def _cross_over(self):          # TODO: FIX
-        # PENDIENTE: elegir realmente el padre mas apto
-        # usar los genes del padre mas apto
-        # asumir que padre 1 es el mas apto
-        offspring: list[Genome] = []
-
+    # Separa los procesos para generar la siguiente generación de Genomas
+    def next_generation(self):
+        new_generation: list[Genome] = []
         #! In each generation, 25% of offspring resulted from mutation without crossover
         population_no_crossover = int(self.population_size * .25)
         
         for i in range(population_no_crossover):
-            pass
             rand_genome = random.choice(self.genomes)
             rand_genome.mutate()
-            offspring.append(rand_genome)
+            new_generation.append(rand_genome)
+
+        new_generation.extend(
+            self.speciation(self.population_size - population_no_crossover))    # Agrega los retoños que se generen de la especiacion
+
+        self.genomes = new_generation                                           # Reemplaza los anteriores Genomas
+
+
+    def speciation(self, num_offsprings: int):              # TODO: implementar
+                                                            # TODO: proceso de separar
+        offsprings: list[Genome] = []
+
+        for i in range(num_offsprings):
+
+            genome1 = random.choice(self.genomes)           #! TEMPORAL
+            genome2 = random.choice(self.genomes)           #! TEMPORAL
+
+            offsprings.append(self.cross_over(genome1, genome2))
+        
+        for offspring in offsprings:                        # Le da la oportunidad a cada retoño de mutar
+            offspring.mutate()
+
+        return offsprings
+
+    # Recibe dos Genomas, los cuales al cruzarse crearan una red 
+    def cross_over(self, genome1: Genome, genome2: Genome):          # TODO: FIX
+        # PENDIENTE: elegir realmente el padre mas apto
+        # usar los genes del padre mas apto
+        # asumir que padre 1 es el mas apto
+        offspring: Genome = Genome()
         
         #! There was a 75% chance that an inherited gene was disabled if it was disabled in either parent.
+        
+        
+        
         # TODO: arreglar el resto de la implementacion
-        for i in range(self.population_size - population_no_crossover):
-            for node in genome1.nodes:
-                child.nodes.append(node)
+        for node in genome1.nodes:
+            child.nodes.append(node)
 
-            # elegir al azar los matching genes
-            # por cada nodo que esta en el padre 1 y padre 2, elegir al azar
-            # innovs = [x.innovation for x in genome2.connections]
-            innovs = {}
-            for x in genome2.connections:
-                innovs[x.innovation] = x
+        # elegir al azar los matching genes
+        # por cada nodo que esta en el padre 1 y padre 2, elegir al azar
+        # innovs = [x.innovation for x in genome2.connections]
+        innovs = {}
+        for x in genome2.connections:
+            innovs[x.innovation] = x
 
-            for conn in genome1.connections:
-                if conn.innovation in innovs.keys():
-                    # elegir al azar entre la conexion del padre1 y padre2
-                    selected = random.choice([conn, innovs[conn.innovation]])
-                    child.connections.append(selected.copy())
-                # si no son matching genes, dejar los genes del padre mas apto
-                else:
-                    child.connections.append(conn.copy())
+        for conn in genome1.connections:
+            if conn.innovation in innovs.keys():
+                # elegir al azar entre la conexion del padre1 y padre2
+                selected = random.choice([conn, innovs[conn.innovation]])
+                child.connections.append(selected.copy())
+            # si no son matching genes, dejar los genes del padre mas apto
+            else:
+                child.connections.append(conn.copy())
 
-            return child
+        return offspring
 
     # Guardar red en un archivo .pkl
     def save_genomes(self, name: str):
@@ -159,11 +183,3 @@ class NEAT:
         n = NodeGenes(len(self.all_nodes) + 1)
         self.all_nodes.append(n)
         return n
-    
-    def evaluate(self):
-        pass
-        for network in self.genomes:        # Evaluar cada genoma
-            pass
-
-    def evaluateGenome(self):
-        pass
