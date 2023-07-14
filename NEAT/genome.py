@@ -1,7 +1,6 @@
 from .neat import NEAT
 from connection_genes import ConnectionGenes, Connection
-from node_genes import NodeGenes
-from genes import Genes
+from node_genes import NodeGenes, Genes
 from innovation import Innovation
 import random
 
@@ -10,6 +9,7 @@ class Genome():
     def __init__(self, inputSize, outputSize):                                  # Cada Genome dispone de dos elementos:
         self.nodes: NodeGenes = NodeGenes(inputSize, outputSize)                # "Lista" de NodeGenes
         self.connections: ConnectionGenes = ConnectionGenes(self.nodes)         # "Lista" de ConnectionGenes
+        self.fitness: float = 0                                                 # Basado en el rendimiento
 
     # Decide si mutar o no y que mutar especificamente
     def mutate(self):

@@ -1,5 +1,4 @@
-from genes import Genes
-from node_genes import NodeGenes
+from node_genes import NodeGenes, Genes
 import random
 
 class Connection():
