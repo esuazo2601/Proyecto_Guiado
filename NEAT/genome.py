@@ -1,6 +1,5 @@
 from .connection_genes import ConnectionGenes, Connection
 from .node_genes import NodeGenes, Genes
-from .innovation import Innovation
 import random
 
 #! MUY IMPORTANTE: El InnovationNumber lo conocen TODOS los Genomes de la Poblacion
@@ -38,12 +37,10 @@ class Genome():
                 uniform = random.random()
 
                 if uniform > .9: # in which case each weight had a 90% chance of being uniformly perturbed
-                    for conn in self.connections:
-                        perturbation = random.randrange(-2.0, 2.0, 0.01)
-                        new_weight = conn.Weight * perturbation
+                    perturbation = random.randrange(-2.0, 2.0, 0.01)
+                    new_weight = conn.Weight * perturbation
                 
                 else:   # and a 10% chance of being assigned a new random value.
-                    for conn in self.connections:
-                        new_weight = random.random()
+                    new_weight = random.random()
 
                 self.connections.mutate_weight(new_weight, conn)
