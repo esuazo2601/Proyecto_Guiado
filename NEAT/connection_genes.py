@@ -12,9 +12,6 @@ class Connection():
 
     def copy(self):
         return self.Input, self.Output, self.Weight, self.Enabled, self.Innovation
-    
-    def mutate_weight(self, new_weight):    #! Mutacion aplicada al Hijo de dos Padres en una Conexion Existente
-        self.Weight = new_weight
 
 
 class ConnectionGenes(NodeGenes):
@@ -26,7 +23,7 @@ class ConnectionGenes(NodeGenes):
             for out_node in nodes.genes:
                 if in_node.type == "INPUT" and out_node.type == "OUTPUT":
                     conn = Connection(in_node.id, out_node.id, random.random(), inn_num.get(in_node.id, out_node.id))
-                    self.genes[(in_node.id, out_node.id)] = conn
+                    self.genes[in_node.id, out_node.id] = conn
 
     """ 
     Crea un Nodo en una Conexion ya existente, resultando en lo siguiente:
@@ -34,17 +31,15 @@ class ConnectionGenes(NodeGenes):
     - El Nodo Final crea una Conexion con Peso de valor 1
     """
     def mutate_add_node(self, conn: Connection):
-        fix = 0                                                         # TODO: implementar innovation_number
-                                                                        # TODO: implementar correctamente esto ↓
         self.genes[conn.Input, conn.Output].Enabled = False             # Deshabilita la Conexion Anterior para Habilitar la Nueva
 
         self.node_count += 1                                            # Aumenta el contador de Nodos
         new_node = Genes(self.node_count, "HIDDEN")                     # Nuevo Nodo
         
-        new_conn1 = Connection(conn.Input, new_node.id, conn.Weight, inn_num.get(conn.Input, new_node.id))  # Conexion desde Nodo Inicial a Nuevo Nodo
+        new_conn1 = Connection(conn.Input, new_node.id, conn.Weight, inn_num.get(conn.Input, new_node.id))
         self.genes[new_conn1.Input, new_conn1.Output] = new_conn1
         
-        new_conn2 = Connection(new_node.id, conn.Output, 1, inn_num.get(new_node.id, conn.Output))           # Conexion desde Nuevo Nodo a Nodo Final
+        new_conn2 = Connection(new_node.id, conn.Output, 1, inn_num.get(new_node.id, conn.Output))
         self.genes[new_conn2.Input, new_conn2.Output] = new_conn2
 
         return new_node                                                 # Retorna el nuevo Nodo para que lo agregue a NodeGenes del Genome
@@ -54,7 +49,7 @@ class ConnectionGenes(NodeGenes):
     - Ambos Nodos se encuentran conectados y recibe un Numero de Innovacion
     """
     def mutate_add_connection(self, node1: int, node2: int):
-        new_conn = Connection(node1, node2, random.random(), inn_num.get(node1, node2))   # TODO: implementar innovation_number
+        new_conn = Connection(node1, node2, random.random(), inn_num.get(node1, node2))
         self.genes[new_conn.Input, new_conn.Output] = new_conn
 
     """ 
@@ -62,4 +57,4 @@ class ConnectionGenes(NodeGenes):
     - La Conexion actualiza el valor de su Peso basada en lo que recibe
     """
     def mutate_weight(self, new_weight: float, conn: Connection):
-        self.genes[conn.Innovation].mutate_weight(new_weight)           # TODO: implementar correctamente esto ←
+        self.genes[conn.Input, conn.Output].Weight = new_weight
