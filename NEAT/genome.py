@@ -1,7 +1,6 @@
-from .neat import NEAT
-from connection_genes import ConnectionGenes, Connection
-from node_genes import NodeGenes, Genes
-from innovation import Innovation
+from .connection_genes import ConnectionGenes, Connection
+from .node_genes import NodeGenes, Genes
+from .innovation import Innovation
 import random
 
 #! MUY IMPORTANTE: El InnovationNumber lo conocen TODOS los Genomes de la Poblacion

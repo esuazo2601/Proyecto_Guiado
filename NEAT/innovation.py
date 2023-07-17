@@ -1,4 +1,4 @@
-from node_genes import Genes
+from .node_genes import Genes
 
 class Innovation:
     innovation = 0

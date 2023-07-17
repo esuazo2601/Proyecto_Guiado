@@ -1,6 +1,6 @@
-from genome import Genome
-from node_genes import NodeGenes, Genes
-from connection_genes import ConnectionGenes, Connection
+from .genome import Genome
+from .node_genes import NodeGenes, Genes
+from .connection_genes import ConnectionGenes, Connection
 
 import random
 

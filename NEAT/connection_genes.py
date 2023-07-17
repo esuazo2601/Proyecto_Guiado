@@ -1,4 +1,4 @@
-from node_genes import NodeGenes, Genes
+from .node_genes import NodeGenes, Genes
 import random
 
 class Connection():
@@ -18,12 +18,12 @@ class Connection():
 
 class ConnectionGenes(NodeGenes):
     def __init__(self, nodes: NodeGenes):
-        self.genes = list[Connection] = {}
-        self.node_count = len(nodes)
+        self.genes: list[Connection] = []
+        self.node_count = len(nodes.genes)
 
         num = 1
-        for in_node in nodes:
-            for out_node in nodes:
+        for in_node in nodes.genes:
+            for out_node in nodes.genes:
                 if in_node.type == "INPUT" and out_node.type == "OUTPUT":
                     conn = Connection(in_node, out_node, random.random(), num)
                     self.genes.append(conn)

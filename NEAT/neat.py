@@ -1,8 +1,8 @@
 import os
-from connection_genes import ConnectionGenes, Connection
-from node_genes import NodeGenes
-from genome import Genome
-from species import Species
+from .connection_genes import ConnectionGenes, Connection
+from .node_genes import NodeGenes
+from .genome import Genome
+from .species import Species
 import pickle
 import random
 
