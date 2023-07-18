@@ -22,8 +22,7 @@ class Genome():
                 rand_node1 = random.choice(self.nodes)
                 rand_node2 = random.choice(self.nodes)
             
-            fix = 0                                                                 # TODO: implementar innovation_number
-            self.connections.mutate_add_connection(rand_node1, rand_node2, fix)
+            self.connections.mutate_add_connection(rand_node1, rand_node2)
 
         # Elige crear un Nuevo Nodo (%10)
         elif choice <= .20:
@@ -31,12 +30,12 @@ class Genome():
             new_node = self.connections.mutate_add_node(new_connection)
             self.nodes.add_node(new_node)
 
-        # Elige mutar todos los Pesos (%10)
+        # Elige mutar todos los Pesos (%80)
         else:
             for conn in self.connections.genes:                
                 uniform = random.random()
 
-                if uniform > .9: # in which case each weight had a 90% chance of being uniformly perturbed
+                if uniform < .9: # in which case each weight had a 90% chance of being uniformly perturbed
                     perturbation = random.randrange(-2.0, 2.0, 0.01)
                     new_weight = conn.Weight * perturbation
                 
