@@ -1,62 +1,78 @@
-from connection_gene import ConnectionGene
-from node_gene import NodeGene
-from genome import Genome
+import os
+from .connection_genes import ConnectionGenes, Connection
+from .node_genes import NodeGenes
+from .genome import Genome
+from .species import Species
 import pickle
+import random
 
 class NEAT:
-    def __init__(self, inputSize, outputSize, clients):
-        self.input_size: int
-        self.output_size: int
-        self.max_clients: int
+    def __init__(self, inputSize, outputSize, populationSize, C1, C2, C3):
+        self.input_size: int = inputSize            # Cantidad de nodos de entrada
+        self.output_size: int = outputSize          # Cantidad de nodos de salida
+        self.population_size: int = populationSize  # Cantidad maxima de genomas por generacion
 
-        self.all_connections: list[ConnectionGene]
-        self.all_nodes: list[NodeGene]
+        self.genomes: list[Genome] = []             # Lista de Genomas
+        for i in range(populationSize):             # Itera hasta llenar la lista con la poblacion de genomas
+            g = Genome(inputSize, outputSize)       # Crea un genoma nuevo
+            self.genomes.append(g)                  # Agrega el genoma al listado
 
-        self.C1: float
-        self.C2: float
-        self.C3: float
+        self.C1: float = C1                         # Valor C1 para calcular fitness
+        self.C2: float = C2                         # Valor C2 para calcular fitness
+        self.C3: float = C3                         # Valor C3 para calcular fitness
 
-        self._reset(self.input_size, self.output_size, self.max_clients)
-
-    def _empty_genome(self):
-        g = Genome(self)
-        for i in range(self.input_size + self.output_size):
-            g.nodes.append(self._get_node(i + 1))
+    # Separa los procesos para generar la siguiente generación de Genomas
+    def next_generation(self, n_species: int):
+        new_generation: list[Genome] = []
+        #! In each generation, 25% of offspring resulted from mutation without crossover
+        population_no_crossover = int(self.population_size * .25)
         
-        return g
+        for i in range(population_no_crossover):
+            rand_genome = random.choice(self.genomes)
+            rand_genome.mutate()
+            new_generation.append(rand_genome)
 
-    def _reset(self, input_size, output_size, max_clients):
-        self.input_size = input_size
-        self.output_size = output_size
-        self.max_clients = max_clients
+        new_species: Species = Species(n_species)
+        
+        new_generation.extend(
+            new_species.speciation(self.population_size - population_no_crossover), # Agrega los retoños que se generen de la especiacion
+                                    self.genomes)                                   # Entrega los Genomas a ordenar
 
-        self.all_connections.clear()
-        self.all_nodes.clear()
+        self.genomes = new_generation                                               # Reemplaza los anteriores Genomas
 
-        for i in range(self.input_size):
-            n: NodeGene = self._get_node()
-            n.x = 0.1
-            n.y = (i + 1) / (self.input_size + 1)
-
-        for i in range(self.output_size):
-            n: NodeGene = self._get_node()
-            n.x = 0.9
-            n.y = (i + 1) / (self.output_size + 1)
-
-    def _get_connection(self, connection: ConnectionGene):
-        c = ConnectionGene(connection.in_node, connection.out_node)
-        c.innovation_number = connection.innovation_number
-        c.weight = connection.weight
-        c.enabled = connection.enabled
-        return c
-
-    def _get_connection(self, node1: NodeGene, node2: NodeGene):
-        c = ConnectionGene(node1, node2)
-        if c in self.all_connections:
-            c.innovation_number = self.all_connections[self.all_connections.index(
-                c)].innovation_number
+    # Guardar red en un archivo .pkl
+    def save_genomes(self, name: str):
+        if os.path.isdir("./saved_model"):
+            with open('./saved_model/{}.pkl', 'wb', name) as file:
+                pickle.dumps(self, file)
         else:
-            c.innovation_number = len(self.all_connections) + 1
+            print("Error")
+
+    # Cargar red desde un archivo .pkl
+    def load_genomes(self, name: str):
+        if os.path.isdir("./saved_model") and os.path.isfile("./saved_model/{}.pkl", name):
+            with open('./saved_model/{}.pkl', 'rb', name) as file:
+                model = pickle.dumps(self, file)
+
+            self.input_size = model.inputSize              # Cantidad de nodos de entrada
+            self.output_size = model.outputSize            # Cantidad de nodos de salida
+            self.population_size = model.populationSize    # Cantidad maxima de genomas por generacion
+
+            self.genomes = model.genomes                   # Lista de Genomas
+
+            self.C1 = model.C1                             # Valor C1 para calcular fitness
+            self.C2 = model.C2                             # Valor C2 para calcular fitness
+            self.C3 = model.C3                             # Valor C3 para calcular fitness
+        
+        else:
+            print("Error")
+
+    def _get_connection(self, node1: NodeGenes, node2: NodeGenes):
+        c = ConnectionGenes(node1, node2)
+        if c in self.all_connections:
+            c.innovation_number = self.all_connections[self.all_connections.index(c)].innovation_number
+        else:
+            c.innovation_number = len(self.all_connections) + 1     #! HAY QUE ACTUALIZAR
             self.all_connections.append(c)
         return c
 
@@ -64,10 +80,6 @@ class NEAT:
         if id and id <= len(self.all_nodes):
             return self.all_nodes[id - 1]
 
-        n = NodeGene(len(self.all_nodes) + 1)
+        n = NodeGenes(len(self.all_nodes) + 1)
         self.all_nodes.append(n)
         return n
-    
-    # serializar red en un archivo .pickle
-    def _serialize(self):
-        pass
