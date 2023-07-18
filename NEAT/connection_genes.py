@@ -47,10 +47,14 @@ class ConnectionGenes(NodeGenes):
     """ 
     Crea una Conexion entre dos Nodos ya existentes, resultando en lo siguiente:
     - Ambos Nodos se encuentran conectados y recibe un Numero de Innovacion
+    * En caso de que la Conexion ya exista, la Habilita o Deshabilita segun corresponda
     """
     def mutate_add_connection(self, node1: int, node2: int):
-        new_conn = Connection(node1, node2, random.random(), inn_num.get(node1, node2))
-        self.genes[new_conn.Input, new_conn.Output] = new_conn
+        if self.genes.get(node1, node2) is None:
+            new_conn = Connection(node1, node2, random.random(), inn_num.get(node1, node2))
+            self.genes[new_conn.Input, new_conn.Output] = new_conn
+        else:   # Si la Conexion ya existe, ve si la Habilita o Deshabilita
+            self.genes[node1, node2].Enabled = False if self.genes[node1, node2].Enabled else True
 
     """ 
     Cambia el valor del Peso de una Conexion, resultando en lo siguiente:
