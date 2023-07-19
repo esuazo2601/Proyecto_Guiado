@@ -22,7 +22,10 @@ class ConnectionGenes(NodeGenes):
         for in_node in nodes.genes:
             for out_node in nodes.genes:
                 if in_node.type == "INPUT" and out_node.type == "OUTPUT":
-                    conn = Connection(in_node.id, out_node.id, random.random(), inn_num.get(in_node.id, out_node.id))
+                    new_weight: float = random.randrange(-100, 100) * 0.01
+                    while new_weight == .0:
+                        new_weight = random.randrange(-100, 100) * 0.01 
+                    conn = Connection(in_node.id, out_node.id, new_weight, inn_num.get(in_node.id, out_node.id))
                     self.genes[in_node.id, out_node.id] = conn
 
     """ 
@@ -50,8 +53,11 @@ class ConnectionGenes(NodeGenes):
     * En caso de que la Conexion ya exista, la Habilita o Deshabilita segun corresponda
     """
     def mutate_add_connection(self, node1: int, node2: int):
-        if self.genes.get(node1, node2) is None:
-            new_conn = Connection(node1, node2, random.random(), inn_num.get(node1, node2))
+        if self.genes.get((node1, node2)) == None:
+            new_weight: float = random.randrange(-100, 100) * 0.01
+            while new_weight == .0:
+               new_weight = random.randrange(-100, 100) * 0.01 
+            new_conn = Connection(node1, node2, new_weight, inn_num.get(node1, node2))
             self.genes[new_conn.Input, new_conn.Output] = new_conn
         else:   # Si la Conexion ya existe, ve si la Habilita o Deshabilita
             self.genes[node1, node2].Enabled = False if self.genes[node1, node2].Enabled else True
