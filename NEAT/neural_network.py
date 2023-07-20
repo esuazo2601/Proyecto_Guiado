@@ -61,6 +61,8 @@ class NeuralNetwork:
                 if len(n.input) == 0:
                     n.ready = True
                 stack.append(n)
+        
+        return [x.value for x in self.outputs]
 
     def train(self):        # Entrenar el modelo
         pass
