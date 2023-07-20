@@ -26,7 +26,7 @@ ready = {self.ready}
             """
 
 class NeuralNetwork:
-    def __init__(self, genome: Genome, input: dict[int]):
+    def __init__(self, genome: Genome):
         self.neuron: dict[int] = {}
         self.outputs = []
         self.inputs = []
@@ -40,9 +40,6 @@ class NeuralNetwork:
                 node.ready = True
                 self.inputs.append(node)
         
-        for i, value in input.items():
-            self.neuron[i].value = value
-        
         for n, conn in genome.connections.genes.items():
             if not conn.Enabled:
                 continue
@@ -53,17 +50,19 @@ class NeuralNetwork:
             self.neuron[_in].output.append(self.neuron[_out])
             self.neuron[_in].weight[self.neuron[_out]] = _weight
         
-        for i, n in self.neuron.items():
-            print(i, ":", n)
+        # DEBUG
+        # for i, n in self.neuron.items():
+        #     print(i, ":", n)
 
 
     # TODO: fix infinite loop
-    def forward(self):
-        # funcion iterativa que usa un stack
+    def forward(self, input: dict[int]):
+        for i, value in input.items():
+            self.neuron[i].value = value
+
         queue = []
         for n in self.outputs:
             queue.append(n)
-        
         while len(queue) != 0:
             n = queue.pop()
             n.ready = True
@@ -71,8 +70,11 @@ class NeuralNetwork:
                 if i.ready:
                     n.value += i.value*i.weight[n]
                 else:
+                    n.ready = False
                     queue.insert(0, i)
-        
+            if not n.ready:
+                queue.insert(0, n)
+
         return [x.value for x in self.outputs]
 
     def train(self):        # Entrenar el modelo
