@@ -3,6 +3,27 @@ from .genome import Genome
 from .connection_genes import ConnectionGenes, Connection
 from .node_genes import NodeGenes, Genes
 from typing import Self
+import numpy as np
+import math
+
+# Funciones de activacion
+def sig(x):
+ return 1/(1 + np.exp(-x))
+
+def relu(x):
+    return max(0.0, x)
+
+def leaky_relu(x):
+  if x>0 :
+    return x
+  else :
+    return 0.01*x
+
+def tanh(x):
+    return math.tanh(x)
+
+def indentity(x):
+    return x
 
 # Clase encargada de ejecutar la red seleccionada por neat y reconstruirla
 # a partir de los archivos .pickle generados por este
@@ -72,7 +93,10 @@ class NeuralNetwork:
                 else:
                     n.ready = False
                     queue.insert(0, i)
-            if not n.ready:
+            if n.ready:
+                if n.type != "INPUT":
+                    n.value = sig(n.value)
+            else:
                 queue.insert(0, n)
 
         return [x.value for x in self.outputs]
