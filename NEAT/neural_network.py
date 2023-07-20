@@ -60,21 +60,18 @@ class NeuralNetwork:
     # TODO: fix infinite loop
     def forward(self):
         # funcion iterativa que usa un stack
-        stack = []
-        for n in self.inputs:
-            stack.append(n)
+        queue = []
+        for n in self.outputs:
+            queue.append(n)
         
-        while len(stack) != 0:
-            n = stack.pop()
-            if n.ready:
-                for i in n.output:
-                    i.value += n.value * n.weight[i]
-                    i.input.remove(n)
-                    stack.append(i)
-            else:
-                if len(n.input) == 0:
-                    n.ready = True
-                stack.append(n)
+        while len(queue) != 0:
+            n = queue.pop()
+            n.ready = True
+            for i in n.input:
+                if i.ready:
+                    n.value += i.value*i.weight[n]
+                else:
+                    queue.insert(0, i)
         
         return [x.value for x in self.outputs]
 
