@@ -4,6 +4,7 @@ from .connection_genes import ConnectionGenes, Connection
 from .innovation import Innovation as inn_num
 
 import random
+from math import inf
 
 class Species():
     def __init__(self, distance_t: float, genomes: list[Genome], C1: float, C2: float, C3: float):
@@ -13,12 +14,11 @@ class Species():
         self.C3: float = C3                         # Valor C3 para calcular fitness
         self.genomes: list[Genome] = genomes
         self.offsprings: list[Genome] = []
-        self.gen_dist: dict[(Genome, Genome)] = {}  # Memorization
     
     def adjusted_fitness(self, i: Genome):
-        summation: int = 0
+        summation: int = 1                  # Evitar division con 0 en caso de que la sumatoria sea 0
         for j in self.genomes:
-            if i is not j:
+            if i != j:
                 summation += self.sh(i, j)
         return i.fitness / summation
 
@@ -27,9 +27,6 @@ class Species():
         return 0 if self.distance(i, j) > self.distance_t else 1
     
     def distance(self, genome1: Genome, genome2: Genome):   # The distance from every other organism j in the population
-        if self.gen_dist.get(genome1, genome2) is not None: # Se agrega un diccionario para ayudar en 
-            return self.gen_dist[genome1, genome2]
-
         conn_parent1: dict[int] = {}
         for _, conn1 in genome1.connections.genes.items():
             conn_parent1[conn1.Innovation] = conn1
@@ -60,31 +57,34 @@ class Species():
             conn_in_1: Connection = conn_parent1.get(i) # Recibe una Conexion o None
             conn_in_2: Connection = conn_parent2.get(i) # Recibe una Conexion o None
             
-            if ((conn_in_1 != None and conn_in_2 == None and is_excess and parent == 1) or      # Conexion existe y quedan Genes de Exceso
-                (conn_in_1 == None and conn_in_2 != None and is_excess and parent == 2)):
+            if conn_in_1 != None and conn_in_2 == None and is_excess and parent == 1:   # Conexion existe y quedan Genes de Exceso
                 E += 1
 
-            elif ((conn_in_1 == None and conn_in_2 != None and is_excess and parent == 1) or    # Conexion existe, pero ya no quedan Genes de Exceso
-                  (conn_in_1 == None and conn_in_2 == None and is_excess and parent == 2)):
+            elif conn_in_1 == None and conn_in_2 != None and is_excess and parent == 2:
+                E += 1
+
+            elif conn_in_1 == None and conn_in_2 != None and is_excess and parent == 1: # Conexion existe, pero ya no quedan Genes de Exceso
+                is_excess = False
+                D += 1
+
+            elif conn_in_1 != None and conn_in_2 == None and is_excess and parent == 2:
                 is_excess = False
                 D += 1
             
-            elif ((conn_in_1 != None and conn_in_2 == None) or                          # Conexion existe y no quedan Genes de Exceso
-                  (conn_in_1 == None and conn_in_2 != None)) and not is_excess:         # Solo quedan Genes Disjuntos
+            elif conn_in_1 != None and conn_in_2 == None and not is_excess:             # Conexion existe y no quedan Genes de Exceso
                 D += 1
 
-            else:                                                                           # Conexion existe en ambos Padres
-                is_excess = False                                                           # En caso de que aun no se haya deshabilitado esta opcion
+            elif conn_in_1 == None and conn_in_2 != None and not is_excess:
+                D += 1
+
+            elif conn_in_1 != None and conn_in_2 != None:                               # Conexion existe en ambos Padres
+                is_excess = False                                                       # En caso de que aun no se haya deshabilitado esta opcion
                 weight_counter += 1
-                W += abs(conn_in_1.Weight - conn_in_2.Weight)                               # Diferencia de Pesos
+                W += abs(conn_in_1.Weight - conn_in_2.Weight)                           # Diferencia de Pesos
 
         W /= weight_counter
 
-        value = self.C1*(E/N) + self.C2*(D/N) + self.C3*W
-        self.gen_dist[genome1, genome2] = value
-        self.gen_dist[genome2, genome1] = value
-
-        return value
+        return self.C1*(E/N) + self.C2*(D/N) + self.C3*W
     
     # Recibe dos Genomas, los cuales al aparearse crearan un nuevo Genoma
     def cross_over(self, parent1: Genome, parent2: Genome):
@@ -120,7 +120,7 @@ class Species():
             elif conn_in_1 == None and conn_in_2 != None:                   # Conexion existe en el Padre 2
                 new_genes[conn_in_2.Input, conn_in_2.Output] = conn_in_2
 
-            else:                                                           # Conexion existe en ambos Padres
+            elif conn_in_1 != None and conn_in_2 != None:                   # Conexion existe en ambos Padres
                 new_genes[conn_in_1.Input, conn_in_1.Output] = conn_in_1
                 new_genes[conn_in_1.Input, conn_in_1.Output].Weight = (conn_in_1.Weight + conn_in_2.Weight) / 2
                 
@@ -146,17 +146,29 @@ class Species():
         return offspring
     
     def speciation(self, num_offsprings: int):          # TODO: implementar
-                                                        # TODO: proceso de separar
-        genome_species: list[Genome] = []
-
-        for i in range(num_offsprings):
-
-            genome1: Genome = random.choice(self.genomes)           #! TEMPORAL
-            genome2: Genome = random.choice(self.genomes)           #! TEMPORAL
-
-            genome_species.append(self.cross_over(genome1, genome2))
+        counter: int = 0                                # TODO: proceso de especiacion y crossover
+        temp: list[float] = []
         
-        for offspring in genome_species:                        # Le da la oportunidad a cada retonyo de mutar
-            offspring.mutate()
+        for genome in self.genomes:
+            temp.append(self.adjusted_fitness(genome))  # Se actualiza el Fitness de TODOS los genomas
 
-        return genome_species
+        for i in range(len(self.genomes)):
+            self.genomes[i].fitness = temp[i]
+
+        while len(self.offsprings) < num_offsprings:
+            min_value: float = inf
+            min_pos: int = 0
+
+            for i in range(len(self.genomes)):
+                if self.genomes[i] != self.genomes[counter] and self.distance(self.genomes[i], self.genomes[counter]) < min_value:
+                    min_value = self.distance(self.genomes[i], self.genomes[counter])
+                    min_pos = i
+
+            self.offsprings.append(self.cross_over(self.genomes[counter], self.genomes[min_pos]))
+        
+            counter = (counter + 1) % num_offsprings
+
+        for i in range(len(self.offsprings)):                        # Le da la oportunidad a cada retonyo de mutar
+            self.offsprings[i].mutate()
+
+        return self.offsprings
