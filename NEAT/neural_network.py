@@ -1,7 +1,5 @@
 from .neat import NEAT
 from .genome import Genome
-from .connection_genes import ConnectionGenes, Connection
-from .node_genes import NodeGenes, Genes
 from typing import Self
 import numpy as np
 import math

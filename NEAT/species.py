@@ -146,14 +146,14 @@ class Species():
         return offspring
     
     def speciation(self, num_offsprings: int):          # TODO: implementar
-        counter: int = 0                                # TODO: proceso de especiacion y crossover
+        counter: int = 0                                # TODO: proceso de especiacion
         temp: list[float] = []
         
         for genome in self.genomes:
             temp.append(self.adjusted_fitness(genome))  # Se actualiza el Fitness de TODOS los genomas
 
         for i in range(len(self.genomes)):
-            self.genomes[i].fitness = temp[i]
+            self.genomes[i].fitness = temp[i]   # Ajusto el fitness de cada genoma
 
         while len(self.offsprings) < num_offsprings:
             min_value: float = inf

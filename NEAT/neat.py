@@ -3,6 +3,7 @@ from .connection_genes import ConnectionGenes, Connection
 from .node_genes import NodeGenes
 from .genome import Genome
 from .species import Species
+from .neural_network import NeuralNetwork
 import pickle
 import random
 
@@ -21,8 +22,19 @@ class NEAT:
         self.C2: float = C2                         # Valor C2 para calcular fitness
         self.C3: float = C3                         # Valor C3 para calcular fitness
 
+    # Encargada de probar las redes creadas y actualizar el valor fitness de cada genoma
+    def train(self, epochs: int, goal: int):
+        for i in range(len(self.genomes)):  # Itera por la lista de Genomas, convirtiendolos y probando la NeuralNetwork
+                                            # TODO: Completar
+            pass
+
+    # Encargada de probar el rendimiento del mejor genoma
+    def test(self):
+                    # TODO: Implementar una vez este listo train()
+        pass
+
     # Separa los procesos para generar la siguiente generación de Genomas
-    def next_generation(self, n_species: int):
+    def next_generation(self, distance_t: float):
         new_generation: list[Genome] = []
         #! In each generation, 25% of offspring resulted from mutation without crossover
         population_no_crossover = int(self.population_size * .25)
@@ -32,11 +44,10 @@ class NEAT:
             rand_genome.mutate()
             new_generation.append(rand_genome)
 
-        new_species: Species = Species(n_species)
+        new_species: Species = Species(distance_t, self.genomes, self.C1, self.C2, self.C3)
         
         new_generation.extend(
-            new_species.speciation(self.population_size - population_no_crossover), # Agrega los retoños que se generen de la especiacion
-                                    self.genomes)                                   # Entrega los Genomas a ordenar
+            new_species.speciation(self.population_size - population_no_crossover)) # Agrega los retoños que se generen de la especiacion
 
         self.genomes = new_generation                                               # Reemplaza los anteriores Genomas
 
@@ -66,20 +77,3 @@ class NEAT:
         
         else:
             print("Error")
-
-    def _get_connection(self, node1: NodeGenes, node2: NodeGenes):
-        c = ConnectionGenes(node1, node2)
-        if c in self.all_connections:
-            c.innovation_number = self.all_connections[self.all_connections.index(c)].innovation_number
-        else:
-            c.innovation_number = len(self.all_connections) + 1     #! HAY QUE ACTUALIZAR
-            self.all_connections.append(c)
-        return c
-
-    def _get_node(self, id=None):
-        if id and id <= len(self.all_nodes):
-            return self.all_nodes[id - 1]
-
-        n = NodeGenes(len(self.all_nodes) + 1)
-        self.all_nodes.append(n)
-        return n
