@@ -4,11 +4,13 @@ from .node_genes import NodeGenes
 from .genome import Genome
 from .species import Species
 from .neural_network import NeuralNetwork
+
 import pickle
 import random
+import gymnasium as gym
 
-class NEAT:
-    def __init__(self, inputSize, outputSize, populationSize, C1, C2, C3):
+class NEAT():
+    def __init__(self, inputSize: int, outputSize: int, populationSize: int, C1: float, C2: float, C3: float):
         self.input_size: int = inputSize            # Cantidad de nodos de entrada
         self.output_size: int = outputSize          # Cantidad de nodos de salida
         self.population_size: int = populationSize  # Cantidad maxima de genomas por generacion
@@ -22,16 +24,39 @@ class NEAT:
         self.C2: float = C2                         # Valor C2 para calcular fitness
         self.C3: float = C3                         # Valor C3 para calcular fitness
 
+        self.best_genome: Genome
+
     # Encargada de probar las redes creadas y actualizar el valor fitness de cada genoma
-    def train(self, epochs: int, goal: int):
-        for i in range(len(self.genomes)):  # Itera por la lista de Genomas, convirtiendolos y probando la NeuralNetwork
-                                            # TODO: Completar
-            pass
+    def train(self, env, epochs: int, goal: float, _input: dict, distance_t: float):        # TODO: Implementar internamente interaccion con environment
+        best_fit: float = 0
+        for episode in range(epochs):
+
+            if best_fit >= goal:
+                self.save_genomes("results_" + str(epochs))
+                print("Episode {}: Best Fitness: {}, Goal: {}", episode, best_fit, goal)
+                break
+
+            for i in range(len(self.genomes)):
+                network: NeuralNetwork = NeuralNetwork(self.genomes[i])
+                self.genomes[i].fitness = network.forward(_input)
+                
+                if self.genomes[i].fitness > best_fit:
+                    best_fit = self.genomes[i].fitness
+                    self.best_genome = self.genomes[i]
+
+            self.next_generation(distance_t)
+            print("Episode {}: Best Fitness: {}, Goal: {}", episode, best_fit, goal)
+
 
     # Encargada de probar el rendimiento del mejor genoma
-    def test(self):
-                    # TODO: Implementar una vez este listo train()
-        pass
+    def test(self, _input: dict):
+        if self.best_genome is not None:
+            pass
+            network: NeuralNetwork = NeuralNetwork(self.best_genome)
+            network.forward(_input)
+
+        else:
+            print("Error")
 
     # Separa los procesos para generar la siguiente generación de Genomas
     def next_generation(self, distance_t: float):
@@ -75,5 +100,7 @@ class NEAT:
             self.C2 = model.C2                             # Valor C2 para calcular fitness
             self.C3 = model.C3                             # Valor C3 para calcular fitness
         
+            self.best_genome = model.best_genome
+
         else:
             print("Error")
