@@ -9,6 +9,10 @@ import pickle
 import random
 import gymnasium as gym
 
+# TODO: Elegir cual de los dos utilizar para procesamiento del renderizado del ambiente
+#import tensorflow
+#import torch
+
 class NEAT():
     def __init__(self, inputSize: int, outputSize: int, populationSize: int, C1: float, C2: float, C3: float):
         self.input_size: int = inputSize            # Cantidad de nodos de entrada
@@ -27,25 +31,42 @@ class NEAT():
         self.best_genome: Genome
 
     # Encargada de probar las redes creadas y actualizar el valor fitness de cada genoma
-    def train(self, env, epochs: int, goal: float, _input: dict, distance_t: float):        # TODO: Implementar internamente interaccion con environment
+    def train(self, env, epochs: int, goal: float, distance_t: float):
+        """
+        Se le entrega un ambiente con el cual interactuar, asi como tambien por cuantas epocas, hasta que objetivo y la distancia de compatibilidad entre Genomas.
+        """
+        height, width, channels = env.observation_space.shape   #! Para red convolucional
         best_fit: float = 0
-        for episode in range(epochs):
+        for episode in range(1, epochs+1):
 
             if best_fit >= goal:
                 self.save_genomes("results_" + str(epochs))
-                print("Episode {}: Best Fitness: {}, Goal: {}", episode, best_fit, goal)
+                print("Epoch {}: Best Fitness: {}, Goal: {}", episode, best_fit, goal)
                 break
 
             for i in range(len(self.genomes)):
                 network: NeuralNetwork = NeuralNetwork(self.genomes[i])
-                self.genomes[i].fitness = network.forward(_input)
+
+                state = env.reset()
+                done = False
+                score = 0 
+                
+                while not done:
+                    env.render()
+                    # TODO: Utilizar Tensorflow o Pytorch para aplicar Conv2D de render y entregar resultado de Flatten como entrada a red
+                    action = network.forward()
+                    #action = random.randrange(0, self.output_size, 1)
+                    n_state, reward, done, truncated, info = env.step(action)
+                    score += reward
+
+                self.genomes[i].fitness = score
                 
                 if self.genomes[i].fitness > best_fit:
                     best_fit = self.genomes[i].fitness
                     self.best_genome = self.genomes[i]
 
             self.next_generation(distance_t)
-            print("Episode {}: Best Fitness: {}, Goal: {}", episode, best_fit, goal)
+            print("Epoch {}: Best Fitness: {}, Goal: {}", episode, best_fit, goal)
 
 
     # Encargada de probar el rendimiento del mejor genoma
@@ -60,6 +81,12 @@ class NEAT():
 
     # Separa los procesos para generar la siguiente generación de Genomas
     def next_generation(self, distance_t: float):
+        """
+        Se encarga de evolucionar los Genomas luego de probar las redes creadas.
+        Primero genera una poblacion que solo muta Genomas aleatorios de la poblacion original.
+        Luego se preocupa de rellenar el resto de la poblacion con Genomas producto de de la cruza entre los dos con mejor compatibilidad.
+        Finalmente les aplica una mutacion aleatoria.
+        """
         new_generation: list[Genome] = []
         #! In each generation, 25% of offspring resulted from mutation without crossover
         population_no_crossover = int(self.population_size * .25)
