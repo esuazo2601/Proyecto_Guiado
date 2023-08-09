@@ -3,11 +3,18 @@ from .connection_genes import ConnectionGenes, Connection
 from .node_genes import NodeGenes
 from .genome import Genome
 from .species import Species
+from .neural_network import NeuralNetwork
+
 import pickle
 import random
+import gymnasium as gym
 
-class NEAT:
-    def __init__(self, inputSize, outputSize, populationSize, C1, C2, C3):
+# TODO: Elegir cual de los dos utilizar para procesamiento del renderizado del ambiente
+#import tensorflow
+#import torch
+
+class NEAT():
+    def __init__(self, inputSize: int, outputSize: int, populationSize: int, C1: float, C2: float, C3: float):
         self.input_size: int = inputSize            # Cantidad de nodos de entrada
         self.output_size: int = outputSize          # Cantidad de nodos de salida
         self.population_size: int = populationSize  # Cantidad maxima de genomas por generacion
@@ -21,8 +28,65 @@ class NEAT:
         self.C2: float = C2                         # Valor C2 para calcular fitness
         self.C3: float = C3                         # Valor C3 para calcular fitness
 
+        self.best_genome: Genome
+
+    # Encargada de probar las redes creadas y actualizar el valor fitness de cada genoma
+    def train(self, env, epochs: int, goal: float, distance_t: float):
+        """
+        Se le entrega un ambiente con el cual interactuar, asi como tambien por cuantas epocas, hasta que objetivo y la distancia de compatibilidad entre Genomas.
+        """
+        height, width, channels = env.observation_space.shape   #! Para red convolucional
+        best_fit: float = 0
+        for episode in range(1, epochs+1):
+
+            if best_fit >= goal:
+                self.save_genomes("results_" + str(epochs))
+                print("Epoch {}: Best Fitness: {}, Goal: {}", episode, best_fit, goal)
+                break
+
+            for i in range(len(self.genomes)):
+                network: NeuralNetwork = NeuralNetwork(self.genomes[i])
+
+                state = env.reset()
+                done = False
+                score = 0 
+                
+                while not done:
+                    env.render()
+                    # TODO: Utilizar Tensorflow o Pytorch para aplicar Conv2D de render y entregar resultado de Flatten como entrada a red
+                    action = network.forward()
+                    #action = random.randrange(0, self.output_size, 1)
+                    n_state, reward, done, truncated, info = env.step(action)
+                    score += reward
+
+                self.genomes[i].fitness = score
+                
+                if self.genomes[i].fitness > best_fit:
+                    best_fit = self.genomes[i].fitness
+                    self.best_genome = self.genomes[i]
+
+            self.next_generation(distance_t)
+            print("Epoch {}: Best Fitness: {}, Goal: {}", episode, best_fit, goal)
+
+
+    # Encargada de probar el rendimiento del mejor genoma
+    def test(self, _input: dict):
+        if self.best_genome is not None:
+            pass
+            network: NeuralNetwork = NeuralNetwork(self.best_genome)
+            network.forward(_input)
+
+        else:
+            print("Error")
+
     # Separa los procesos para generar la siguiente generación de Genomas
-    def next_generation(self, n_species: int):
+    def next_generation(self, distance_t: float):
+        """
+        Se encarga de evolucionar los Genomas luego de probar las redes creadas.
+        Primero genera una poblacion que solo muta Genomas aleatorios de la poblacion original.
+        Luego se preocupa de rellenar el resto de la poblacion con Genomas producto de de la cruza entre los dos con mejor compatibilidad.
+        Finalmente les aplica una mutacion aleatoria.
+        """
         new_generation: list[Genome] = []
         #! In each generation, 25% of offspring resulted from mutation without crossover
         population_no_crossover = int(self.population_size * .25)
@@ -32,11 +96,10 @@ class NEAT:
             rand_genome.mutate()
             new_generation.append(rand_genome)
 
-        new_species: Species = Species(n_species)
+        new_species: Species = Species(distance_t, self.genomes, self.C1, self.C2, self.C3)
         
         new_generation.extend(
-            new_species.speciation(self.population_size - population_no_crossover), # Agrega los retoños que se generen de la especiacion
-                                    self.genomes)                                   # Entrega los Genomas a ordenar
+            new_species.speciation(self.population_size - population_no_crossover)) # Agrega los retoños que se generen de la especiacion
 
         self.genomes = new_generation                                               # Reemplaza los anteriores Genomas
 
@@ -64,6 +127,8 @@ class NEAT:
             self.C2 = model.C2                             # Valor C2 para calcular fitness
             self.C3 = model.C3                             # Valor C3 para calcular fitness
         
+            self.best_genome = model.best_genome
+
         else:
             print("Error")
 

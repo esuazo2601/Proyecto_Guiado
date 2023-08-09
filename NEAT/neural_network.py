@@ -1,7 +1,4 @@
-from .neat import NEAT
 from .genome import Genome
-from .connection_genes import ConnectionGenes, Connection
-from .node_genes import NodeGenes, Genes
 from typing import Self
 import numpy as np
 import math
@@ -77,8 +74,8 @@ class NeuralNetwork:
 
 
     # TODO: fix infinite loop
-    def forward(self, input: dict[int]):
-        for i, value in input.items():
+    def forward(self, _input: dict[int]):
+        for i, value in _input.items():
             self.neuron[i].value = value
 
         queue = []
@@ -100,9 +97,3 @@ class NeuralNetwork:
                 queue.insert(0, n)
 
         return [x.value for x in self.outputs]
-
-    def train(self):        # Entrenar el modelo
-        pass
-
-    def test(self):         # Probar un modelo ya entrenado
-        pass
