@@ -11,7 +11,7 @@ import gymnasium as gym
 
 # TODO: Elegir cual de los dos utilizar para procesamiento del renderizado del ambiente
 #import tensorflow
-#import torch
+import torch
 
 class NEAT():
     def __init__(self, inputSize: int, outputSize: int, populationSize: int, C1: float, C2: float, C3: float):
@@ -54,7 +54,9 @@ class NEAT():
                 while not done:
                     env.render()
                     # TODO: Utilizar Tensorflow o Pytorch para aplicar Conv2D de render y entregar resultado de Flatten como entrada a red
-                    action = network.forward()
+                    m = torch.nn.Flatten()
+                    output = m(env)
+                    action = network.forward(output)
                     #action = random.randrange(0, self.output_size, 1)
                     n_state, reward, done, truncated, info = env.step(action)
                     score += reward
