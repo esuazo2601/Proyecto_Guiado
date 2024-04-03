@@ -12,6 +12,7 @@ import gymnasium as gym
 # TODO: Elegir cual de los dos utilizar para procesamiento del renderizado del ambiente
 #import tensorflow
 import torch
+import torch.nn as nn
 
 class NEAT():
     def __init__(self, inputSize: int, outputSize: int, populationSize: int, C1: float, C2: float, C3: float):
@@ -32,10 +33,9 @@ class NEAT():
 
     # Encargada de probar las redes creadas y actualizar el valor fitness de cada genoma
     def train(self, env, epochs: int, goal: float, distance_t: float):
-        """
-        Se le entrega un ambiente con el cual interactuar, asi como tambien por cuantas epocas, hasta que objetivo y la distancia de compatibilidad entre Genomas.
-        """
-        height, width, channels = env.observation_space.shape   #! Para red convolucional
+        height, width, channels = env.observation_space.shape
+        batch_size = 1
+
         best_fit: float = 0
         for episode in range(1, epochs+1):
 
@@ -47,22 +47,27 @@ class NEAT():
             for i in range(len(self.genomes)):
                 network: NeuralNetwork = NeuralNetwork(self.genomes[i])
 
-                state = env.reset()
+                state,dict = env.reset()
+                if i==0:
+                    print(state)
                 done = False
                 score = 0 
-                
+
                 while not done:
                     env.render()
-                    # TODO: Utilizar Tensorflow o Pytorch para aplicar Conv2D de render y entregar resultado de Flatten como entrada a red
-                    m = torch.nn.Flatten()
-                    output = m(env)
-                    action = network.forward(output)
-                    #action = random.randrange(0, self.output_size, 1)
+                    
+                    state_to_tensor = torch.tensor(state,dtype=torch.uint8)
+                    print(state_to_tensor)
+                    # Pasar la salida de la capa convolucional a través de la red neuronal
+                    action = network.forward()
+
+                    # Tomar la acción en el entorno y obtener la siguiente observación y recompensa
                     n_state, reward, done, truncated, info = env.step(action)
+                    state = n_state
                     score += reward
 
                 self.genomes[i].fitness = score
-                
+
                 if self.genomes[i].fitness > best_fit:
                     best_fit = self.genomes[i].fitness
                     self.best_genome = self.genomes[i]
