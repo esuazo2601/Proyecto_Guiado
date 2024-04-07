@@ -12,18 +12,21 @@ actions = env.action_space.n
 
 #print(height,width,channels,actions) 210 160 3 6
 
-""" for _ in range(1000):
-    action = env.action_space.sample()
-    observation, reward, terminated, truncated, info = env.step(action)
-    #print(observation,reward,terminated,truncated, info)
-    env.render()
+""" episodes = 2
+for episode in range(1, episodes+1):
+    state = env.reset()
+    done = False
+    score = 0 
+    
+    while not done:
+        env.render()
+        action = random.randrange(0, actions, 1)
+        n_state, reward, done, truncated, info = env.step(action)
+        score += reward
+        #print('n_state:{}, reward:{}, done:{}, truncated:{}, info:{}'.format(n_state, reward, done, truncated, info))
+    print('Episode:{} Score:{}'.format(episode, score))
+env.close() """
 
-    if terminated or truncated:
-        observation, info = env.reset()
-        print(observation)
-        print(info)
-env.close()  
- """
 from NEAT.neat import NEAT
 model: NEAT = NEAT(
   inputSize= 370,

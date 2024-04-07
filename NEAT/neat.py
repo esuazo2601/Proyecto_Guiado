@@ -4,6 +4,7 @@ from .node_genes import NodeGenes
 from .genome import Genome
 from .species import Species
 from .neural_network import NeuralNetwork
+from .convolutional_layer import CNN
 
 import pickle
 import random
@@ -46,18 +47,20 @@ class NEAT():
 
             for i in range(len(self.genomes)):
                 network: NeuralNetwork = NeuralNetwork(self.genomes[i])
-
                 state,dict = env.reset()
-                if i==0:
-                    print(state)
                 done = False
                 score = 0 
 
                 while not done:
                     env.render()
                     
-                    state_to_tensor = torch.tensor(state,dtype=torch.uint8)
+                    state_to_tensor = torch.tensor(state,dtype=torch.float)
+                    state_to_tensor = state_to_tensor.unsqueeze(0)
+                    print(state_to_tensor.size())
                     print(state_to_tensor)
+                    conv_layer = CNN()
+                    output = conv_layer(state_to_tensor)
+                    #print(output)
                     # Pasar la salida de la capa convolucional a través de la red neuronal
                     action = network.forward()
 
