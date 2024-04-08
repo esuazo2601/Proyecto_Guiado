@@ -5,6 +5,7 @@ from .genome import Genome
 from .species import Species
 from .neural_network import NeuralNetwork
 from .convolutional_layer import CNN
+import matplotlib.pyplot as plt
 
 import pickle
 import random
@@ -13,7 +14,7 @@ import gymnasium as gym
 # TODO: Elegir cual de los dos utilizar para procesamiento del renderizado del ambiente
 #import tensorflow
 import torch
-import torch.nn as nn
+import tensordict
 
 class NEAT():
     def __init__(self, inputSize: int, outputSize: int, populationSize: int, C1: float, C2: float, C3: float):
@@ -35,7 +36,6 @@ class NEAT():
     # Encargada de probar las redes creadas y actualizar el valor fitness de cada genoma
     def train(self, env, epochs: int, goal: float, distance_t: float):
         height, width, channels = env.observation_space.shape
-        batch_size = 1
 
         best_fit: float = 0
         for episode in range(1, epochs+1):
@@ -56,16 +56,30 @@ class NEAT():
                     
                     state_to_tensor = torch.tensor(state,dtype=torch.float)
                     state_to_tensor = state_to_tensor.unsqueeze(0)
-                    print(state_to_tensor.size())
-                    print(state_to_tensor)
+                    permuted_tensor = state_to_tensor.permute(0, 3, 1, 2)
                     conv_layer = CNN()
-                    output = conv_layer(state_to_tensor)
+                    output = conv_layer(permuted_tensor)
                     #print(output)
-                    # Pasar la salida de la capa convolucional a través de la red neuronal
-                    action = network.forward()
+                    #output_array = output.squeeze(0).detach().numpy()
 
+                    # Visualizar la salida de la red convolucional
+                    """      plt.figure(figsize=(8, 8))
+                    plt.imshow(output_array[0], cmap='gray')  # Muestra solo el primer canal
+                    plt.axis('off')
+                    plt.show() """
+
+
+
+                    # Crea un diccionario donde las claves son enteros y los valores son los elementos de la lista
+                    #flattened_output = flattened_output[flattened_output != 0]
+                    #lista_tensor = flattened_output.tolist()
+                    #resultado = {i: int(valor) for i, valor in enumerate(lista_tensor)} 
+                    #print(len(resultado))
+                    #action = network.forward(resultado)
+                    
+                    #print("Actions: ",action)
                     # Tomar la acción en el entorno y obtener la siguiente observación y recompensa
-                    n_state, reward, done, truncated, info = env.step(action)
+                    n_state, reward, done, truncated, info = env.step()
                     state = n_state
                     score += reward
 

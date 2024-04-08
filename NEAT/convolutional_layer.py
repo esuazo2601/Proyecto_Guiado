@@ -9,20 +9,21 @@ class CNN(nn.Module):
         self.conv2 = nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1)
         self.conv3 = nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1)
         self.pool = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
-        self.fc1 = nn.Linear(64 * 52 * 40, 64) # Calculated based on input dimensions
-        self.fc2 = nn.Linear(64, 10) # 10 classes for example
         
     def forward(self, x):
         x = self.pool(torch.relu(self.conv1(x)))
         x = self.pool(torch.relu(self.conv2(x)))
         x = self.pool(torch.relu(self.conv3(x)))
-        x = x.view(-1, 64 * 52 * 40) # Flatten the output for the fully connected layer
-        x = torch.relu(self.fc1(x))
-        x = self.fc2(x)
+        
         return x
 
 # Crear una instancia del modelo
-# modelo = CNN()
+#modelo = CNN()
 
-# Imprimir el resumen del modelo
-# print(modelo)
+# Ejemplo de uso
+#input_data = torch.randn(1, 3, 210, 160)  # Entrada de ejemplo
+#output = modelo(input_data)
+
+# Aplanar el tensor de salida con flatten()
+#flattened_output = torch.flatten(output, start_dim=1)
+#print(flattened_output.shape)

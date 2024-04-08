@@ -1,5 +1,5 @@
 from .genome import Genome
-#from typing import Self
+from typing import Self
 import numpy as np
 import math
 
@@ -69,14 +69,15 @@ class NeuralNetwork:
             self.neuron[_in].weight[self.neuron[_out]] = _weight
         
         # DEBUG
-        # for i, n in self.neuron.items():
-        #     print(i, ":", n)
+        #for i, n in self.neuron.items():
+        #    print(i, ":", n)
 
 
     # TODO: fix infinite loop
     def forward(self, _input: dict[int]):
         for i, value in _input.items():
-            self.neuron[i].value = value
+            self.neuron[i].value = value 
+        #self.neuron = _input
 
         queue = []
         for n in self.outputs:
