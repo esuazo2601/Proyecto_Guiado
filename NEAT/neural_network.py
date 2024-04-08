@@ -75,8 +75,11 @@ class NeuralNetwork:
 
     # TODO: fix infinite loop
     def forward(self, _input: dict[int]):
-        for i, value in _input.items():
-            self.neuron[i].value = value 
+        # for i, value in _input.items():
+        #    self.neuron[i].value = value
+        for node_id, value in _input.items():
+            if node_id in self.neuron:
+                self.neuron[node_id].value = value 
         #self.neuron = _input
 
         queue = []

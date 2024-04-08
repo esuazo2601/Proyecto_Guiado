@@ -4,7 +4,7 @@ import gymnasium as gym
 import random
 
 #ale = ALEInterface()
-env = gym.make("ALE/Breakout-v5", render_mode = "human")
+env = gym.make("ALE/SpaceInvaders-v5", render_mode = "human")
 env.metadata["render_fps"] = 60
 height,width,channels = env.observation_space.shape
 actions = env.action_space.n
@@ -26,7 +26,7 @@ model.train(
   epochs=5,
   goal=300,
   distance_t=0.5
-) 
+)  
 
 """ episodes = 2
 for episode in range(1, episodes+1):

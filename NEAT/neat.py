@@ -14,7 +14,7 @@ import gymnasium as gym
 # TODO: Elegir cual de los dos utilizar para procesamiento del renderizado del ambiente
 #import tensorflow
 import torch
-import tensordict
+
 
 class NEAT():
     def __init__(self, inputSize: int, outputSize: int, populationSize: int, C1: float, C2: float, C3: float):
@@ -59,11 +59,13 @@ class NEAT():
                     permuted_tensor = state_to_tensor.permute(0, 3, 1, 2)
                     conv_layer = CNN()
                     output = conv_layer(permuted_tensor)
-                    #print(output)
-                    #output_array = output.squeeze(0).detach().numpy()
+                    output = output.tolist()
+                    
+                    diccionario = {indice: valor for indice, valor in enumerate(output[0])}
+                    
 
                     # Visualizar la salida de la red convolucional
-                    """      plt.figure(figsize=(8, 8))
+                    """   plt.figure(figsize=(8, 8))
                     plt.imshow(output_array[0], cmap='gray')  # Muestra solo el primer canal
                     plt.axis('off')
                     plt.show() """
@@ -75,11 +77,11 @@ class NEAT():
                     #lista_tensor = flattened_output.tolist()
                     #resultado = {i: int(valor) for i, valor in enumerate(lista_tensor)} 
                     #print(len(resultado))
-                    #action = network.forward(resultado)
+                    action = network.forward(diccionario)
                     
-                    #print("Actions: ",action)
+                    print("Actions: ",action)
                     # Tomar la acción en el entorno y obtener la siguiente observación y recompensa
-                    n_state, reward, done, truncated, info = env.step()
+                    n_state, reward, done, truncated, info = env.step(int(action[0]))
                     state = n_state
                     score += reward
 
