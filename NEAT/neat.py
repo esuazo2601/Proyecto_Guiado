@@ -62,6 +62,7 @@ class NEAT():
                     output = output.tolist()
                     
                     diccionario = {indice: valor for indice, valor in enumerate(output[0])}
+                    print(len(diccionario))
                     
 
                     # Visualizar la salida de la red convolucional
@@ -79,9 +80,9 @@ class NEAT():
                     #print(len(resultado))
                     action = network.forward(diccionario)
                     
-                    print("Actions: ",action)
+                    print("Actions: ", int(action[0] * 6))
                     # Tomar la acción en el entorno y obtener la siguiente observación y recompensa
-                    n_state, reward, done, truncated, info = env.step(int(action[0]))
+                    n_state, reward, done, truncated, info = env.step(int(action[0])*6)
                     state = n_state
                     score += reward
 
