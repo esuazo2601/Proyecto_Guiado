@@ -28,7 +28,7 @@ model = NEAT(
 model.train(
     env=env,
     epochs=5,
-    goal=150,
+    goal=500,
     distance_t=0.5
 )
 

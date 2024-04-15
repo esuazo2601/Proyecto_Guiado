@@ -80,7 +80,7 @@ class NEAT():
                     self.best_genome = self.genomes[i]
             #print(score)
             self.next_generation(distance_t)
-            print("Epoch {}: Best Fitness: {}, Goal: {}", episode, best_fit, goal)
+            print(f"Epoch {episode}: Best Fitness: {best_fit}, Goal: {goal}")
 
 
     # Encargada de probar el rendimiento del mejor genoma
