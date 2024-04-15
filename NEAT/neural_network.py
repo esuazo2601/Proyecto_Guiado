@@ -22,6 +22,12 @@ def tanh(x):
 def indentity(x):
     return x
 
+def softmax(x):
+    """Compute softmax values for each sets of scores in x."""
+    e_x = np.exp(x - np.max(x))
+    return e_x / e_x.sum()
+
+
 # Clase encargada de ejecutar la red seleccionada por neat y reconstruirla
 # a partir de los archivos .pickle generados por este
 
@@ -85,6 +91,7 @@ class NeuralNetwork:
         queue = []
         for n in self.outputs:
             queue.append(n)
+            #print(queue)
         while len(queue) != 0:
             n = queue.pop()
             n.ready = True
@@ -99,5 +106,12 @@ class NeuralNetwork:
                     n.value = sig(n.value)
             else:
                 queue.insert(0, n)
-
-        return [x.value for x in self.outputs]
+        
+        #Se acumulan los valores de salida en un array
+        output_values = []
+        for x in self.outputs:
+            output_values.append(x.value)
+        
+        #return [x.value for x in self.outputs]
+        #Se retornan los valores normalizados con softmax
+        return softmax(output_values)

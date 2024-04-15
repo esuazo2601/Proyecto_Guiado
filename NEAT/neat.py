@@ -4,8 +4,9 @@ from .node_genes import NodeGenes
 from .genome import Genome
 from .species import Species
 from .neural_network import NeuralNetwork
-from .convolutional_layer import CNN
 import matplotlib.pyplot as plt
+from .utils import indice_max_probabilidad
+import atexit
 
 import pickle
 import random
@@ -35,8 +36,9 @@ class NEAT():
 
     # Encargada de probar las redes creadas y actualizar el valor fitness de cada genoma
     def train(self, env, epochs: int, goal: float, distance_t: float):
-        height, width, channels = env.observation_space.shape
-
+        #height, width, channels = env.observation_space.shape
+        
+        print(f"goal: {goal},epochs: {epochs},goal: {goal},genomes: {len(self.genomes)}")
         best_fit: float = 0
         for episode in range(1, epochs+1):
 
@@ -46,52 +48,37 @@ class NEAT():
                 break
 
             for i in range(len(self.genomes)):
+                print(f"genome: {i}")
                 network: NeuralNetwork = NeuralNetwork(self.genomes[i])
-                state,dict = env.reset()
+                state,info = env.reset()
+                obs_ram = env.unwrapped.ale.getRAM()
+                #print(obs_ram)
                 done = False
                 score = 0 
 
                 while not done:
+                    
                     env.render()
                     
-                    state_to_tensor = torch.tensor(state,dtype=torch.float)
-                    state_to_tensor = state_to_tensor.unsqueeze(0)
-                    permuted_tensor = state_to_tensor.permute(0, 3, 1, 2)
-                    conv_layer = CNN()
-                    output = conv_layer(permuted_tensor)
-                    output = output.tolist()
+                    dict_input = {i: int(valor) for i, valor in enumerate(obs_ram)} 
+                    actions = network.forward(dict_input)
+                    final_action = indice_max_probabilidad(actions)
+                    #print("Accion:",env.unwrapped.get_action_meanings()[final_action])
                     
-                    diccionario = {indice: valor for indice, valor in enumerate(output[0])}
-                    print(len(diccionario))
-                    
-
-                    # Visualizar la salida de la red convolucional
-                    """   plt.figure(figsize=(8, 8))
-                    plt.imshow(output_array[0], cmap='gray')  # Muestra solo el primer canal
-                    plt.axis('off')
-                    plt.show() """
-
-
-
-                    # Crea un diccionario donde las claves son enteros y los valores son los elementos de la lista
-                    #flattened_output = flattened_output[flattened_output != 0]
-                    #lista_tensor = flattened_output.tolist()
-                    #resultado = {i: int(valor) for i, valor in enumerate(lista_tensor)} 
-                    #print(len(resultado))
-                    action = network.forward(diccionario)
-                    
-                    print("Actions: ", int(action[0] * 6))
                     # Tomar la acción en el entorno y obtener la siguiente observación y recompensa
-                    n_state, reward, done, truncated, info = env.step(int(action[0])*6)
+                    n_state, reward, done, truncated, info = env.step(final_action)
+                    obs_ram = env.unwrapped.ale.getRAM()
+                    #print(obs_ram)
+                    
                     state = n_state
                     score += reward
 
                 self.genomes[i].fitness = score
-
+                
                 if self.genomes[i].fitness > best_fit:
                     best_fit = self.genomes[i].fitness
                     self.best_genome = self.genomes[i]
-
+            #print(score)
             self.next_generation(distance_t)
             print("Epoch {}: Best Fitness: {}, Goal: {}", episode, best_fit, goal)
 
@@ -132,11 +119,11 @@ class NEAT():
 
     # Guardar red en un archivo .pkl
     def save_genomes(self, name: str):
-        if os.path.isdir("./saved_model"):
-            with open('./saved_model/{}.pkl', 'wb', name) as file:
-                pickle.dumps(self, file)
-        else:
-            print("Error")
+        if not os.path.isdir("./saved_model"):
+            os.makedirs("./saved_model")
+
+        with open(f'./saved_model/{name}.pkl', 'wb') as file:
+            pickle.dump(self, file)
 
     # Cargar red desde un archivo .pkl
     def load_genomes(self, name: str):
