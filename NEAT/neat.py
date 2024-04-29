@@ -4,7 +4,7 @@ from .node_genes import NodeGenes
 from .genome import Genome
 from .species import Species
 from .neural_network import NeuralNetwork
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 from .utils import indice_max_probabilidad
 import atexit
 
@@ -14,7 +14,7 @@ import gymnasium as gym
 
 # TODO: Elegir cual de los dos utilizar para procesamiento del renderizado del ambiente
 #import tensorflow
-import torch
+#import torch
 
 
 class NEAT():
@@ -35,52 +35,61 @@ class NEAT():
         self.best_genome: Genome
 
     # Encargada de probar las redes creadas y actualizar el valor fitness de cada genoma
-    def train(self, env, epochs: int, goal: float, distance_t: float):
-        #height, width, channels = env.observation_space.shape
-        
-        print(f"goal: {goal},epochs: {epochs},goal: {goal},genomes: {len(self.genomes)}")
+    def train(self, env, epochs: int, goal: float, distance_t: float, output_file:str):
+        # height, width, channels = env.observation_space.shape
+
+        with open(output_file, "w") as f:
+            f.write("epoch;prom_fit\n")
+
+        print(f"goal: {goal}, epochs: {epochs}, goal: {goal}, genomes: {len(self.genomes)}")
         best_fit: float = 0
+
         for episode in range(1, epochs+1):
+            fits_epoch = []
 
             if best_fit >= goal:
                 self.save_genomes("results_" + str(epochs))
-                print("Epoch {}: Best Fitness: {}, Goal: {}", episode, best_fit, goal)
+                print(f"Epoch {episode}: Best Fitness: {best_fit}, Goal: {goal}")
                 break
 
             for i in range(len(self.genomes)):
                 print(f"genome: {i}")
-                network: NeuralNetwork = NeuralNetwork(self.genomes[i])
-                state,info = env.reset()
+                network = NeuralNetwork(self.genomes[i])
+                state, info = env.reset()
                 obs_ram = env.unwrapped.ale.getRAM()
-                #print(obs_ram)
                 done = False
                 score = 0 
 
                 while not done:
-                    
                     env.render()
-                    
+
                     dict_input = {i: int(valor) for i, valor in enumerate(obs_ram)} 
                     actions = network.forward(dict_input)
                     final_action = indice_max_probabilidad(actions)
-                    #print("Accion:",env.unwrapped.get_action_meanings()[final_action])
-                    
-                    # Tomar la acción en el entorno y obtener la siguiente observación y recompensa
+
                     n_state, reward, done, truncated, info = env.step(final_action)
                     obs_ram = env.unwrapped.ale.getRAM()
-                    #print(obs_ram)
-                    
+
                     state = n_state
                     score += reward
 
                 self.genomes[i].fitness = score
-                
+                fits_epoch.append(self.genomes[i].fitness)
+
                 if self.genomes[i].fitness > best_fit:
                     best_fit = self.genomes[i].fitness
                     self.best_genome = self.genomes[i]
-            #print(score)
-            self.next_generation(distance_t)
-            print(f"Epoch {episode}: Best Fitness: {best_fit}, Goal: {goal}")
+
+                self.next_generation(distance_t)
+                print(f"Epoch {episode}: Best Fitness: {best_fit}, Goal: {goal}")
+
+            prom = sum(fits_epoch) / len(fits_epoch)
+            ep = str(episode)
+            prom = str(prom)
+            print(ep, prom)
+
+            with open(output_file, 'a') as f:
+                f.write(ep + ";" + prom + "\n")
 
 
     # Encargada de probar el rendimiento del mejor genoma

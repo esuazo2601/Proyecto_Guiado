@@ -11,6 +11,7 @@ env.metadata["render_fps"] = 60
 #height,width,channels = env.observation_space.shape
 #print(height,width,channels,actions) 
 actions = env.action_space.n
+print(actions)
 obs_ram = env.unwrapped.ale.getRAM()
 
 # 210 160 3 4 
@@ -18,7 +19,7 @@ from NEAT.neat import NEAT
 model = NEAT(
     inputSize=len(obs_ram),
     outputSize=actions,
-    populationSize=20,
+    populationSize=10,
     C1=1.0,
     C2=2.0,
     C3=3.0
@@ -27,9 +28,10 @@ model = NEAT(
 # Define la función de entrenamiento y entrena el modelo
 model.train(
     env=env,
-    epochs=5,
-    goal=500,
-    distance_t=0.5
+    epochs=80,
+    goal=1500,
+    distance_t=0.5,
+    output_file="fitness_history.txt"
 )
 
 
