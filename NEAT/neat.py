@@ -85,7 +85,7 @@ class NEAT():
             std_dev = np.std(fits_epoch)
             ep = str(episode)
             prom = str(prom)
-            std_dev = str(std_dev)
+            std_dev = "{:.3f}".format(std_dev)
             print(ep, prom, std_dev)
 
             with open(output_file, 'a') as f:
