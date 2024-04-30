@@ -4,10 +4,10 @@ from .node_genes import NodeGenes
 from .genome import Genome
 from .species import Species
 from .neural_network import NeuralNetwork
+import numpy as np
 #import matplotlib.pyplot as plt
 from .utils import indice_max_probabilidad
-import atexit
-
+#import atexit
 import pickle
 import random
 import gymnasium as gym
@@ -36,10 +36,8 @@ class NEAT():
 
     # Encargada de probar las redes creadas y actualizar el valor fitness de cada genoma
     def train(self, env, epochs: int, goal: float, distance_t: float, output_file:str):
-        # height, width, channels = env.observation_space.shape
-
         with open(output_file, "w") as f:
-            f.write("epoch;prom_fit\n")
+            f.write("epoch;prom_fit;std_dev\n")
 
         print(f"goal: {goal}, epochs: {epochs}, goal: {goal}, genomes: {len(self.genomes)}")
         best_fit: float = 0
@@ -83,13 +81,15 @@ class NEAT():
                 self.next_generation(distance_t)
                 print(f"Epoch {episode}: Best Fitness: {best_fit}, Goal: {goal}")
 
-            prom = sum(fits_epoch) / len(fits_epoch)
+            prom = np.mean(fits_epoch)
+            std_dev = np.std(fits_epoch)
             ep = str(episode)
             prom = str(prom)
-            print(ep, prom)
+            std_dev = str(std_dev)
+            print(ep, prom, std_dev)
 
             with open(output_file, 'a') as f:
-                f.write(ep + ";" + prom + "\n")
+                f.write(ep + ";" + prom + ";" + std_dev + "\n")
 
 
     # Encargada de probar el rendimiento del mejor genoma

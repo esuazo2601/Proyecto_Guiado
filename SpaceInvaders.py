@@ -6,7 +6,7 @@ import time
 import atexit
 
 #ale = ALEInterface()
-env = gym.make("ALE/SpaceInvaders-v5",render_mode="human")
+env = gym.make("ALE/SpaceInvaders-v5",render_mode="rgb_array")
 env.metadata["render_fps"] = 60
 #height,width,channels = env.observation_space.shape
 #print(height,width,channels,actions) 
@@ -19,7 +19,7 @@ from NEAT.neat import NEAT
 model = NEAT(
     inputSize=len(obs_ram),
     outputSize=actions,
-    populationSize=10,
+    populationSize=20,
     C1=1.0,
     C2=2.0,
     C3=3.0
@@ -28,10 +28,10 @@ model = NEAT(
 # Define la función de entrenamiento y entrena el modelo
 model.train(
     env=env,
-    epochs=80,
+    epochs=150,
     goal=1500,
     distance_t=0.5,
-    output_file="fitness_history.txt"
+    output_file="fitness_history_1.txt"
 )
 
 
