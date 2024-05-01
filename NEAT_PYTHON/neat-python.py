@@ -20,38 +20,55 @@ def indice_max_probabilidad(probabilidades):
     
     return indice
 
+class MyReporter(neat.StatisticsReporter):
+    def __init__(self, filename, generation):
+        super().__init__()
+
+        # Nombre del archivo CSV
+        self.filename = filename
+        self.generation = generation
+        with open(self.filename, 'a') as f:
+          f.write("gen;prom_fitness;std_dev\n")
+
+    def post_evaluate(self, config, population, species, best_genome):
+        # Obtener el fitness de cada genoma en la población actual
+        fitness_generacion_actual = [c.fitness for c in population.values()]
+
+        # Calcular el promedio y la desviación estándar del fitness de la generación actual
+        promedio = np.mean(fitness_generacion_actual)
+        desviacion_estandar = np.std(fitness_generacion_actual)
+
+        # Escribir la información en el archivo CSV
+        with open(self.filename, 'a') as f:
+            f.write(f'{self.generation};{promedio};{desviacion_estandar}\n')
+
+        # Llamar al método de la clase base para mantener la funcionalidad original
+        super().post_evaluate(config, population, species, best_genome)
+
 def eval_genome(genomes, config):
     env = gym.make('ALE/SpaceInvaders-v5', render_mode = "rgb_array")  # Crear el ambiente Space Invaders
     observation = env.reset()  # Reiniciar el ambiente
 
     for genome_id, genome in genomes:
-      #print(len(genomes))
-      genome.fitness = 0
-      net = neat.nn.FeedForwardNetwork.create(genome, config)  # Crear la red neuronal
+        genome.fitness = 0
+        net = neat.nn.FeedForwardNetwork.create(genome, config)  # Crear la red neuronal
 
-      total_reward = 0
-      done = False
-      obs_ram = env.unwrapped.ale.getRAM()
-      #print(obs_ram)
-      while not done:
-          env.render()
-          
-          output =  net.activate(obs_ram)  # Activar la red neuronal para obtener la acción
-          softmaxed = softmax(output)
-          action = indice_max_probabilidad(softmaxed)
+        total_reward = 0
+        done = False
+        obs_ram = env.unwrapped.ale.getRAM()
 
-          #print(output)
-          #print(softmaxed)
-          #print(action)
+        while not done:
+            env.render()
+            
+            output =  net.activate(obs_ram)  # Activar la red neuronal para obtener la acción
+            softmaxed = softmax(output)
+            action = indice_max_probabilidad(softmaxed)
 
-          observation, reward,done,truncated ,info = env.step(action)  # Ejecutar la acción en el ambiente
-          obs_ram = env.unwrapped.ale.getRAM()
-          total_reward += reward  # Acumular el premio
-          #print(total_reward)
+            observation, reward, done, truncated, info = env.step(action)  # Ejecutar la acción en el ambiente
+            obs_ram = env.unwrapped.ale.getRAM()
+            total_reward += reward  # Acumular el premio
         
-      genome.fitness = total_reward
-      #print(genome.fitness)
-
+        genome.fitness = total_reward
 
 def train(config_file, epochs):
     # Cargar configuración NEAT
@@ -60,18 +77,20 @@ def train(config_file, epochs):
 
     # Crear el población inicial
     p = neat.Population(config)
-
+    my_reporter = MyReporter("fitness_history.txt", 0)  # Iniciar el generador en la generación 0
     # Añadir un reportero para monitorizar el progreso
     p.add_reporter(neat.StdOutReporter(True))
+    p.add_reporter(my_reporter)
     stats = neat.StatisticsReporter()
     p.add_reporter(stats)
 
     # Entrenar NEAT
-    winner = p.run(eval_genome, epochs)  # Entrenar durante 150 generaciones
+    for generation in range(epochs):
+        my_reporter.generation = generation  # Actualizar el número de generación en MyReporter
+        winner = p.run(eval_genome, 1)  # Entrenar una sola generación
 
     # Mostrar el mejor genoma
     print('\nBest genome:\n{!s}'.format(winner))
-
 
 config_path = 'NEAT_PYTHON/config.txt'
 

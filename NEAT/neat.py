@@ -54,6 +54,7 @@ class NEAT():
                 print(f"genome: {i}")
                 network = NeuralNetwork(self.genomes[i])
                 state, info = env.reset()
+                #print(len(state.flatten()))
                 obs_ram = env.unwrapped.ale.getRAM()
                 done = False
                 score = 0 
