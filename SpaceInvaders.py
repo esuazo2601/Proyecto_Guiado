@@ -13,7 +13,7 @@ env.metadata["render_fps"] = 60
 actions = env.action_space.n
 print(actions)
 obs_ram = env.unwrapped.ale.getRAM()
-
+print(len(obs_ram))
 # 210 160 3 4 
 from NEAT.neat import NEAT
 model = NEAT(

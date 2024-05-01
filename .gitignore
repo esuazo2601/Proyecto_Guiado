@@ -8,3 +8,4 @@ NEAT/__pycache__/innovation.cpython-311.pyc
 NEAT/__pycache__/neat.cpython-311.pyc
 NEAT/__pycache__/neural_network.cpython-311.pyc
 *.pyc
+.vscode
