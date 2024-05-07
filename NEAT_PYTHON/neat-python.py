@@ -41,15 +41,16 @@ class MyReporter(neat.StatisticsReporter):
         # Escribir la información en el archivo CSV
         with open(self.filename, 'a') as f:
             f.write(f'{self.generation};{promedio};{desviacion_estandar}\n')
+        self.generation += 1
 
         # Llamar al método de la clase base para mantener la funcionalidad original
         super().post_evaluate(config, population, species, best_genome)
 
 def eval_genome(genomes, config):
     env = gym.make('ALE/SpaceInvaders-v5', render_mode = "rgb_array")  # Crear el ambiente Space Invaders
-    observation = env.reset()  # Reiniciar el ambiente
-
     for genome_id, genome in genomes:
+        observation = env.reset()  # Reiniciar el ambiente
+        #print("Genome: ", genome_id)
         genome.fitness = 0
         net = neat.nn.FeedForwardNetwork.create(genome, config)  # Crear la red neuronal
 
@@ -77,7 +78,7 @@ def train(config_file, epochs):
 
     # Crear el población inicial
     p = neat.Population(config)
-    my_reporter = MyReporter("fitness_history.txt", 0)  # Iniciar el generador en la generación 0
+    my_reporter = MyReporter("fitness_history_1.txt", 0)  # Iniciar el generador en la generación 0
     # Añadir un reportero para monitorizar el progreso
     p.add_reporter(neat.StdOutReporter(True))
     p.add_reporter(my_reporter)
@@ -87,12 +88,12 @@ def train(config_file, epochs):
     # Entrenar NEAT
     for generation in range(epochs):
         my_reporter.generation = generation  # Actualizar el número de generación en MyReporter
-        winner = p.run(eval_genome, 1)  # Entrenar una sola generación
+        winner = p.run(eval_genome, 100)  # Entrenar arg2 generaciones
 
     # Mostrar el mejor genoma
     print('\nBest genome:\n{!s}'.format(winner))
 
-config_path = 'NEAT_PYTHON/config.txt'
+config_path = 'config.txt'
 
 # Entrenar la red neuronal utilizando NEAT
 train(config_path, 1000)
