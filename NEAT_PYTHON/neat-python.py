@@ -21,12 +21,12 @@ def indice_max_probabilidad(probabilidades):
     return indice
 
 class MyReporter(neat.StatisticsReporter):
-    def __init__(self, filename, generation):
+    def __init__(self, filename):
         super().__init__()
 
         # Nombre del archivo CSV
         self.filename = filename
-        self.generation = generation
+        self.generation = 0
         with open(self.filename, 'a') as f:
           f.write("gen;prom_fitness;std_dev\n")
 
@@ -36,12 +36,13 @@ class MyReporter(neat.StatisticsReporter):
 
         # Calcular el promedio y la desviación estándar del fitness de la generación actual
         promedio = np.mean(fitness_generacion_actual)
+        promedio = round(promedio,2)
         desviacion_estandar = np.std(fitness_generacion_actual)
+        desviacion_estandar = round(desviacion_estandar,2)
 
         # Escribir la información en el archivo CSV
         with open(self.filename, 'a') as f:
             f.write(f'{self.generation};{promedio};{desviacion_estandar}\n')
-        self.generation += 1
 
         # Llamar al método de la clase base para mantener la funcionalidad original
         super().post_evaluate(config, population, species, best_genome)
@@ -59,8 +60,7 @@ def eval_genome(genomes, config):
         obs_ram = env.unwrapped.ale.getRAM()
 
         while not done:
-            env.render()
-            
+            #env.render()
             output =  net.activate(obs_ram)  # Activar la red neuronal para obtener la acción
             softmaxed = softmax(output)
             action = indice_max_probabilidad(softmaxed)
@@ -71,29 +71,33 @@ def eval_genome(genomes, config):
         
         genome.fitness = total_reward
 
-def train(config_file, epochs):
+def train(config_file):
     # Cargar configuración NEAT
-    config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
-                         neat.DefaultSpeciesSet, neat.DefaultStagnation, config_file)
+    config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction, neat.DefaultSpeciesSet, neat.DefaultStagnation, config_file)
 
     # Crear el población inicial
     p = neat.Population(config)
-    my_reporter = MyReporter("fitness_history_1.txt", 0)  # Iniciar el generador en la generación 0
+    my_reporter = MyReporter("fitness_history_1.txt")  # Iniciar el generador en la generación 0
+    
+
     # Añadir un reportero para monitorizar el progreso
     p.add_reporter(neat.StdOutReporter(True))
     p.add_reporter(my_reporter)
-    stats = neat.StatisticsReporter()
-    p.add_reporter(stats)
+    p.add_reporter(neat.Checkpointer(100))
+    #stats = neat.StatisticsReporter()
+    
+    #p.add_reporter(stats)
 
     # Entrenar NEAT
-    for generation in range(epochs):
+    for generation in range(300):
         my_reporter.generation = generation  # Actualizar el número de generación en MyReporter
-        winner = p.run(eval_genome, 100)  # Entrenar arg2 generaciones
+        winner = p.run(eval_genome, 1)  # Entrenar arg2 generaciones
 
     # Mostrar el mejor genoma
     print('\nBest genome:\n{!s}'.format(winner))
 
-config_path = 'config.txt'
+config_path = 'NEAT_PYTHON/config.txt'
 
 # Entrenar la red neuronal utilizando NEAT
-train(config_path, 1000)
+if __name__ == '__main__':
+    train(config_path)
