@@ -5,16 +5,15 @@ from .genome import Genome
 from .species import Species
 from .neural_network import NeuralNetwork
 import numpy as np
-#import matplotlib.pyplot as plt
+import multiprocessing as mp
 from .utils import indice_max_probabilidad
-#import atexit
 import pickle
 import random
 import gymnasium as gym
+from gymnasium.wrappers import FlattenObservation
+import logging
 
-# TODO: Elegir cual de los dos utilizar para procesamiento del renderizado del ambiente
-#import tensorflow
-#import torch
+gym.logger.set_level(50)
 
 
 class NEAT():
@@ -35,7 +34,7 @@ class NEAT():
         self.best_genome: Genome
 
     # Encargada de probar las redes creadas y actualizar el valor fitness de cada genoma
-    def train(self, env, epochs: int, goal: float, distance_t: float, output_file:str):
+    def train(self, epochs: int, goal: float, distance_t: float, output_file:str):
         with open(output_file, "w") as f:
             f.write("epoch;prom_fit;std_dev\n")
 
@@ -43,55 +42,55 @@ class NEAT():
         best_fit: float = 0
 
         for episode in range(1, epochs+1):
+            print("episode: ",episode)
             fits_epoch = []
 
             if best_fit >= goal:
                 self.save_genomes("results_" + str(epochs))
                 print(f"Epoch {episode}: Best Fitness: {best_fit}, Goal: {goal}")
                 break
+            
+            pool = mp.Pool()
+            results = pool.map(self._fitness_function,self.genomes)
+            pool.close()
+            pool.join()
+            
+            for genome, fitness in zip(self.genomes, results):
+                genome.fitness = fitness
+                fits_epoch.append(genome.fitness)
 
-            for i in range(len(self.genomes)):
-                print(f"genome: {i}")
-                network = NeuralNetwork(self.genomes[i])
-                state, info = env.reset()
-                #print(len(state.flatten()))
-                obs_ram = env.unwrapped.ale.getRAM()
-                done = False
-                score = 0 
-
-                while not done:
-                    env.render()
-
-                    dict_input = {i: int(valor) for i, valor in enumerate(obs_ram)} 
-                    actions = network.forward(dict_input)
-                    final_action = indice_max_probabilidad(actions)
-
-                    n_state, reward, done, truncated, info = env.step(final_action)
-                    obs_ram = env.unwrapped.ale.getRAM()
-
-                    state = n_state
-                    score += reward
-
-                self.genomes[i].fitness = score
-                fits_epoch.append(self.genomes[i].fitness)
-
-                if self.genomes[i].fitness > best_fit:
-                    best_fit = self.genomes[i].fitness
-                    self.best_genome = self.genomes[i]
-
-                self.next_generation(distance_t)
-                print(f"Epoch {episode}: Best Fitness: {best_fit}, Goal: {goal}")
-
+            self.next_generation(distance_t=distance_t)
             prom = np.mean(fits_epoch)
             std_dev = np.std(fits_epoch)
             ep = str(episode)
             prom = str(prom)
             std_dev = "{:.3f}".format(std_dev)
-            print(ep, prom, std_dev)
 
             with open(output_file, 'a') as f:
                 f.write(ep + ";" + prom + ";" + std_dev + "\n")
 
+
+    def _fitness_function(self,genome) -> float:
+    
+        env = gym.make('SpaceInvaders-v4',render_mode = 'rgb_array')
+        env = FlattenObservation(env)
+
+        network = NeuralNetwork(genome)
+        done = False
+        score = 0
+        state, info = env.reset()
+        while not done:
+            
+            dict_input = {i:int(valor) for i, valor in enumerate(state[:self.input_size])}
+            actions = network.forward(dict_input)
+            final_action  = indice_max_probabilidad(actions)
+            
+            n_state, reward, done, truncated, info = env.step(final_action)
+            state = n_state
+            
+            score += reward
+        genome.fitness = score
+        return genome.fitness
 
     # Encargada de probar el rendimiento del mejor genoma
     def test(self, _input: dict):

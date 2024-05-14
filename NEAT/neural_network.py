@@ -103,7 +103,7 @@ class NeuralNetwork:
                     queue.insert(0, i)
             if n.ready:
                 if n.type != "INPUT":
-                    n.value = sig(n.value)
+                    n.value = relu(n.value) #Aqui se cambia la funcion de activacion
             else:
                 queue.insert(0, n)
         
