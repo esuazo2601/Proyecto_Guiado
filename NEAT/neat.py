@@ -34,7 +34,7 @@ class NEAT():
         self.best_genome: Genome
 
     # Encargada de probar las redes creadas y actualizar el valor fitness de cada genoma
-    def train(self, epochs: int, goal: float, distance_t: float, output_file:str):
+    def train(self, epochs: int, goal: float, distance_t: float, output_file: str):
         with open(output_file, "w") as f:
             f.write("epoch;prom_fit;std_dev\n")
 
@@ -42,7 +42,7 @@ class NEAT():
         best_fit: float = 0
 
         for episode in range(1, epochs+1):
-            print("episode: ",episode)
+            print("episode: ", episode)
             fits_epoch = []
 
             if best_fit >= goal:
@@ -51,24 +51,26 @@ class NEAT():
                 break
             
             pool = mp.Pool()
-            results = pool.map(self._fitness_function,self.genomes)
+            results = pool.map(self._fitness_function, self.genomes)
             pool.close()
             pool.join()
             
             for genome, fitness in zip(self.genomes, results):
                 genome.fitness = fitness
                 fits_epoch.append(genome.fitness)
-                print(fits_epoch)
-        
-        self.next_generation(distance_t=distance_t)
-        prom = np.mean(fits_epoch)
-        std_dev = np.std(fits_epoch)
-        ep = str(episode)
-        prom = str(prom)
-        std_dev = "{:.3f}".format(std_dev)
+            
+            # Calculate and write averages and standard deviations for this episode
+            prom = np.mean(fits_epoch)
+            std_dev = np.std(fits_epoch)
+            ep = str(episode)
+            prom = str(prom)
+            std_dev = "{:.3f}".format(std_dev)
 
-        with open(output_file, 'a') as f:
-            f.write(ep + ";" + prom + ";" + std_dev + "\n")
+            with open(output_file, 'a') as f:
+                f.write(ep + ";" + prom + ";" + std_dev + "\n")
+
+            # Generate next generation
+            self.next_generation(distance_t=distance_t)
 
 
     def _fitness_function(self,genome) -> float:
