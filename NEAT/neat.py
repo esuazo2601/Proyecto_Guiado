@@ -58,16 +58,17 @@ class NEAT():
             for genome, fitness in zip(self.genomes, results):
                 genome.fitness = fitness
                 fits_epoch.append(genome.fitness)
+                print(fits_epoch)
+        
+        self.next_generation(distance_t=distance_t)
+        prom = np.mean(fits_epoch)
+        std_dev = np.std(fits_epoch)
+        ep = str(episode)
+        prom = str(prom)
+        std_dev = "{:.3f}".format(std_dev)
 
-            self.next_generation(distance_t=distance_t)
-            prom = np.mean(fits_epoch)
-            std_dev = np.std(fits_epoch)
-            ep = str(episode)
-            prom = str(prom)
-            std_dev = "{:.3f}".format(std_dev)
-
-            with open(output_file, 'a') as f:
-                f.write(ep + ";" + prom + ";" + std_dev + "\n")
+        with open(output_file, 'a') as f:
+            f.write(ep + ";" + prom + ";" + std_dev + "\n")
 
 
     def _fitness_function(self,genome) -> float:
