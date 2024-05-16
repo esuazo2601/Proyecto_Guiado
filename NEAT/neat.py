@@ -11,10 +11,8 @@ import pickle
 import random
 import gymnasium as gym
 from gymnasium.wrappers import FlattenObservation
-import logging
 
 gym.logger.set_level(50)
-
 
 class NEAT():
     def __init__(self, inputSize: int, outputSize: int, populationSize: int, C1: float, C2: float, C3: float):
@@ -50,14 +48,12 @@ class NEAT():
                 print(f"Epoch {episode}: Best Fitness: {best_fit}, Goal: {goal}")
                 break
             
-            pool = mp.Pool()
-            results = pool.map(self._fitness_function, self.genomes)
-            pool.close()
-            pool.join()
+            genome_ids = list(range(len(self.genomes)))
+            fitness_values = self.parallel_fitness_evaluation(genome_ids)
             
-            for genome, fitness in zip(self.genomes, results):
-                genome.fitness = fitness
-                fits_epoch.append(genome.fitness)
+            for genome_id, fitness_value in zip(genome_ids, fitness_values):
+                self.genomes[genome_id].fitness = fitness_value
+                fits_epoch.append(fitness_value)
             
             # Calculate and write averages and standard deviations for this episode
             prom = np.mean(fits_epoch)
@@ -73,8 +69,9 @@ class NEAT():
             self.next_generation(distance_t=distance_t)
 
 
-    def _fitness_function(self,genome) -> float:
-    
+    def _fitness_function(self,genome_id):
+        
+        genome = self.genomes[genome_id]
         env = gym.make('SpaceInvaders-v4',render_mode = 'rgb_array')
         env = FlattenObservation(env)
 
@@ -94,6 +91,12 @@ class NEAT():
             score += reward
         genome.fitness = score
         return genome.fitness
+        
+    def parallel_fitness_evaluation(self, genome_ids):
+        with mp.Pool() as pool:
+            fitness_values = pool.map(self._fitness_function, genome_ids)
+        return fitness_values
+
 
     # Encargada de probar el rendimiento del mejor genoma
     def test(self, _input: dict):

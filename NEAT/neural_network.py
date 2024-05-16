@@ -64,15 +64,37 @@ class NeuralNetwork:
                 node.ready = True
                 self.inputs.append(node)
         
+        #print(self.neuron)
         for n, conn in genome.connections.genes.items():
             if not conn.Enabled:
                 continue
             _in = conn.Input
             _out = conn.Output
             _weight = conn.Weight
-            self.neuron[_out].input.append(self.neuron[_in])
-            self.neuron[_in].output.append(self.neuron[_out])
-            self.neuron[_in].weight[self.neuron[_out]] = _weight
+            
+            # Check if input and output neurons exist
+            if _in in self.neuron and _out in self.neuron:
+                self.neuron[_out].input.append(self.neuron[_in])
+                self.neuron[_in].output.append(self.neuron[_out])
+                self.neuron[_in].weight[self.neuron[_out]] = _weight
+            else:
+                # If either input or output neuron is not found, pick any other neuron of the same type
+                if _in not in self.neuron:
+                    _in_type = genome.nodes.genes[_in].type
+                    for node in self.neuron.values():
+                        if node.type == _in_type:
+                            self.neuron[_out].input.append(node)
+                            node.output.append(self.neuron[_out])
+                            node.weight[self.neuron[_out]] = _weight
+                            break
+                if _out not in self.neuron:
+                    _out_type = genome.nodes.genes[_out].type
+                    for node in self.neuron.values():
+                        if node.type == _out_type:
+                            self.neuron[_out].input.append(node)
+                            node.output.append(self.neuron[_out])
+                            node.weight[self.neuron[_out]] = _weight
+                            break
         
         # DEBUG
         #for i, n in self.neuron.items():
