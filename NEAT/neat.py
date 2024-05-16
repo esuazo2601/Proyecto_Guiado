@@ -44,7 +44,8 @@ class NEAT():
 
         for episode in range(1, epochs+1):
             fits_epoch = []
-
+            print(f"episode: {episode}\n")
+            
             if best_fit >= goal:
                 self.save_genomes("results_" + str(epochs))
                 print(f"Epoch {episode}: Best Fitness: {best_fit}, Goal: {goal}")
@@ -55,19 +56,16 @@ class NEAT():
                 network = NeuralNetwork(self.genomes[i])
                 state, info = env.reset()
                 #print(len(state.flatten()))
-                obs_ram = env.unwrapped.ale.getRAM()
                 done = False
                 score = 0 
-
                 while not done:
-                    env.render()
+                    #env.render()
 
-                    dict_input = {i: int(valor) for i, valor in enumerate(obs_ram)} 
+                    dict_input = {i: int(valor) for i, valor in enumerate(state)} 
                     actions = network.forward(dict_input)
                     final_action = indice_max_probabilidad(actions)
 
                     n_state, reward, done, truncated, info = env.step(final_action)
-                    obs_ram = env.unwrapped.ale.getRAM()
 
                     state = n_state
                     score += reward
@@ -79,8 +77,6 @@ class NEAT():
                     best_fit = self.genomes[i].fitness
                     self.best_genome = self.genomes[i]
 
-                self.next_generation(distance_t)
-                print(f"Epoch {episode}: Best Fitness: {best_fit}, Goal: {goal}")
 
             prom = np.mean(fits_epoch)
             std_dev = np.std(fits_epoch)
@@ -91,6 +87,7 @@ class NEAT():
 
             with open(output_file, 'a') as f:
                 f.write(ep + ";" + prom + ";" + std_dev + "\n")
+            self.next_generation(distance_t)
 
 
     # Encargada de probar el rendimiento del mejor genoma
