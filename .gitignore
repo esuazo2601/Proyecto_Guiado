@@ -1,11 +1,5 @@
 
-NEAT/__pycache__/connection_genes.cpython-39.pyc
-NEAT/__pycache__/species.cpython-39.pyc
-NEAT/__pycache__/connection_genes.cpython-311.pyc
-NEAT/__pycache__/__init__.cpython-311.pyc
-NEAT/__pycache__/genome.cpython-311.pyc
-NEAT/__pycache__/innovation.cpython-311.pyc
-NEAT/__pycache__/neat.cpython-311.pyc
-NEAT/__pycache__/neural_network.cpython-311.pyc
+NEAT/__pycache__/*
 *.pyc
 .vscode
+./__pycache__
