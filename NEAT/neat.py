@@ -72,22 +72,27 @@ class NEAT():
     def _fitness_function(self,genome_id):
         
         genome = self.genomes[genome_id]
-        env = gym.make('SpaceInvaders-v4',render_mode = 'rgb_array')
-        env = FlattenObservation(env)
+        env = gym.make('SpaceInvaders-v4',render_mode = None)
+        #env = FlattenObservation(env)
 
         network = NeuralNetwork(genome)
         done = False
         score = 0
         state, info = env.reset()
+        obs_ram = env.unwrapped.ale.getRAM()
+        print(len(obs_ram))
         while not done:
             
-            dict_input = {i:int(valor) for i, valor in enumerate(state[:self.input_size])}
+            #dict_input = {i:int(valor) for i, valor in enumerate(state[:self.input_size])}
+            dict_input = {i:int(valor) for i, valor in enumerate(obs_ram)}
             actions = network.forward(dict_input)
-            final_action  = indice_max_probabilidad(actions)
+            #print("actions: ",actions)
+            final_action  = np.argmax(actions)
+            #print(final_action)
             
             n_state, reward, done, truncated, info = env.step(final_action)
             state = n_state
-            
+            obs_ram = env.unwrapped.ale.getRAM()
             score += reward
         genome.fitness = score
         return genome.fitness

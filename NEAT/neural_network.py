@@ -67,7 +67,7 @@ class NeuralNetwork:
                     self.inputs.append(node)
             
             # Print neuron information for debugging
-            print("Neurons initialized:", self.neuron.keys())
+            #print("Neurons initialized:", self.neuron.keys())
 
             # Connect neurons based on genome connections
             for conn in genome.connections.genes.values():
