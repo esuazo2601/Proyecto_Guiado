@@ -1,5 +1,4 @@
-
-NEAT/__pycache__/*
+NEAT/__pycache__
 *.pyc
 .vscode
-./__pycache__
+__pycache__
