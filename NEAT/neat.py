@@ -68,7 +68,7 @@ class NEAT:
         with open(output_file, "w") as f:
             f.write("epoch;prom_fit;std_dev;best\n")
 
-        best_fit = 0
+        prom = 0
 
         for episode in range(1, epochs + 1):
 
@@ -90,8 +90,8 @@ class NEAT:
             print(f"Best fitness in epoch {episode}: {best_fit}")
 
             print(f"Epoch {episode}")
-            if best_fit >= goal:
-                self.save_genomes("results_" + str(epochs))
+            if prom >= goal:
+                self.save_genomes("results_" + str(prom))
                 break
             self.next_generation(distance_t)
 
