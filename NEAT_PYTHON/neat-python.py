@@ -96,7 +96,7 @@ def train(config_file):
     # Mostrar el mejor genoma
     print('\nBest genome:\n{!s}'.format(winner))
 
-config_path = 'NEAT_PYTHON/config.txt'
+config_path = 'config.txt'
 
 # Entrenar la red neuronal utilizando NEAT
 if __name__ == '__main__':

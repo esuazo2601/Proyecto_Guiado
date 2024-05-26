@@ -15,5 +15,6 @@ if __name__ == '__main__':
         epochs=400,
         goal=800,
         distance_t=0.3,
-        output_file="fitness_history.txt"
+        output_file="fitness_history_sigmoid.txt",
+        visualize=True
     )

@@ -117,7 +117,7 @@ class NeuralNetwork:
                     queue.insert(0, i)
             if n.ready:
                 if n.type != "INPUT":
-                    n.value = tanh(n.value)  # Change activation function here if needed
+                    n.value = sig(n.value)  # Change activation function here if needed
         
         # Collect and return the output values, normalized with softmax
         output_values = [x.value for x in self.outputs]
