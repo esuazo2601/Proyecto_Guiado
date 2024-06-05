@@ -1,1 +1,0 @@
-epoch;prom_fit;std_dev
