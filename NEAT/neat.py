@@ -49,9 +49,11 @@ class NEAT(nn.Module):
 
             while not done or truncated:
                 #start = time.time()
-                state_tensor = torch.tensor(state, dtype=torch.int).to(self.device)
+                #state_tensor = torch.tensor(state, dtype=torch.int).to(self.device)
                 #print(obs_ram_tensor)
-                actions = network.forward(state_tensor)
+
+                state = {i: state[i] for i in range(len(state))}
+                actions = network.forward(state)
 
                 final_action = torch.argmax(actions)
                 final_action = final_action.item()

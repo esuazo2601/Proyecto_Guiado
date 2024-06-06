@@ -23,10 +23,10 @@ def softmax(x):
 class Neuron(nn.Module):
     def __init__(self, type: str, device: torch.device) -> None:
         super(Neuron,self).__init__()
-        self.input: list[Neuron] = []
-        self.output: list[Neuron] = []
+        self.input: list[Self] = []
+        self.output: list[Self] = []
         self.value: torch.Tensor = torch.tensor(0.0, device=device)  # Inicializa el tensor en el dispositivo
-        self.weight: dict[Neuron, torch.Tensor] = {}
+        self.weight: dict[Self, torch.Tensor] = {}
         self.type = type
         self.ready = False
         self.device = device
@@ -41,14 +41,14 @@ ready = {self.ready}
         """
 
 class NeuralNetwork(nn.Module):
-    def __init__(self, genome: Genome, device: torch.device) -> torch.Tensor:
+    def __init__(self, genome: Genome, device: torch.DeviceObjType):
         super(NeuralNetwork,self).__init__()
-        self.neuron: dict[int, Neuron] = {}
+        self.neuron: dict[int] = {}
         self.outputs = []
         self.inputs = []
         self.device = device
         for n in genome.nodes.genes:
-            node = Neuron(n.type, device)
+            node = Neuron(n,device=device)
             node.type = n.type
             self.neuron[n.id] = node
             if n.type == "OUTPUT":
@@ -57,8 +57,6 @@ class NeuralNetwork(nn.Module):
                 node.ready = True
                 self.inputs.append(node)
         
-        self.to(device=device)
-
         for n, conn in genome.connections.genes.items():
             if not conn.Enabled:
                 continue
@@ -67,34 +65,35 @@ class NeuralNetwork(nn.Module):
             _weight = conn.Weight
             self.neuron[_out].input.append(self.neuron[_in])
             self.neuron[_in].output.append(self.neuron[_out])
-            self.neuron[_in].weight[self.neuron[_out]] = torch.tensor(_weight, device=device)  # Mueve el peso al dispositivo
+            self.neuron[_in].weight[self.neuron[_out]] = _weight
+        
+        # DEBUG
+        # for i, n in self.neuron.items():
+        #     print(i, ":", n)
 
-    def forward(self, _input: torch.Tensor):
-        # Set the values of the input nodes
-        for i, node in enumerate(self.inputs):
-            node.value = _input[i]
+    def forward(self, _input: dict[int]):
+        print(self.neuron)
+        for i, value in _input.items():
+            self.neuron[i].value = value
 
         queue = []
         for n in self.outputs:
             queue.append(n)
-
         while len(queue) != 0:
             n = queue.pop()
             n.ready = True
             for i in n.input:
                 if i.ready:
-                    n.value += i.value * i.weight[n]
-                    #print(f"Neuron {n}: value {n.value}, weight {i.weight[n]}")  # Debugging line
+                    n.value += i.value*i.weight[n]
                 else:
                     n.ready = False
                     queue.insert(0, i)
             if n.ready:
                 if n.type != "INPUT":
-                    n.value = leaky_relu(n.value)
+                    n.value = F.sigmoid(n.value)
             else:
                 queue.insert(0, n)
 
-        # Get the values of the output nodes and apply the softmax function
         output_values = [x.value for x in self.outputs]
         output_values = torch.tensor(output_values,dtype=torch.float)
         return softmax(output_values)

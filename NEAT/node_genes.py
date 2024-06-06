@@ -11,7 +11,7 @@ class NodeGenes():
         outputN : list[NodeGenes] = []
 
         for i in range(0, inputSize):
-            n = Genes(i+1, "INPUT")
+            n = Genes(i, "INPUT")
             inputN.append(n)
             self.genes.append(n)
 
