@@ -72,7 +72,7 @@ class NeuralNetwork(nn.Module):
         #     print(i, ":", n)
 
     def forward(self, _input: dict[int]):
-        print(self.neuron)
+        #print(self.neuron)
         for i, value in _input.items():
             self.neuron[i].value = value
 
