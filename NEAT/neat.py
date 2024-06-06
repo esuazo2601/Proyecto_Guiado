@@ -39,7 +39,7 @@ class NEAT(nn.Module):
     def evaluate_genome(self,genome):
             env = gym.make("SpaceInvaders-ramDeterministic-v4")
             #env = FlattenObservation(env)
-            network = NeuralNetwork(genome, self.device)  # Move network to GPU
+            network = NeuralNetwork(genome,self.input_size, self.output_size, self.device )  # Move network to GPU
             network.to(self.device)  # Ensure weights and biases are on GPU
             
             state,info = env.reset()
