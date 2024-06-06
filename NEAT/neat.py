@@ -12,15 +12,18 @@ import torch
 import torch.nn as nn
 import torch.multiprocessing as mp
 import gymnasium as gym
+import torch
+import torch.nn.functional as F
 from gymnasium.wrappers import FlattenObservation
+import time
 
 class NEAT(nn.Module):
-    def __init__(self, inputSize: int, outputSize: int, populationSize: int, C1: float, C2: float, C3: float):
+    def __init__(self, inputSize: int, outputSize: int, populationSize: int, C1: float, C2: float, C3: float, device:torch.DeviceObjType):
         super(NEAT,self).__init__()
         self.input_size: int = inputSize
         self.output_size: int = outputSize
         self.population_size: int = populationSize
-        self.device = torch.device("cuda")
+        self.device = device
 
         self.genomes: list[Genome] = []
         for i in range(populationSize):
@@ -34,34 +37,37 @@ class NEAT(nn.Module):
         self.best_genome: Genome = None
 
     def evaluate_genome(self,genome):
-        env = gym.make("ALE/SpaceInvaders-v5",render_mode = "rgb_array")
-        env = FlattenObservation(env)
-        network = NeuralNetwork(genome, torch.device("cuda"))  # Move network to GPU
-        network.to(torch.device("cuda"))  # Ensure weights and biases are on GPU
+            env = gym.make("SpaceInvaders-ramDeterministic-v4")
+            #env = FlattenObservation(env)
+            network = NeuralNetwork(genome, self.device)  # Move network to GPU
+            network.to(self.device)  # Ensure weights and biases are on GPU
+            
+            state,info = env.reset()
+            #print(state)
+            done = False
+            score = 0
 
-        state, info = env.reset()
-        done = False
-        score = 0
-        while not done or truncated:
-            # Convert state to tensor and move to GPU
-            state_tensor = torch.tensor(state, dtype=torch.float).to(torch.device("cuda"))
+            while not done or truncated:
+                #start = time.time()
+                state_tensor = torch.tensor(state, dtype=torch.int).to(self.device)
+                #print(obs_ram_tensor)
+                actions = network.forward(state_tensor)
 
-            # Forward pass on GPU
-            actions = network.forward(state_tensor)
+                final_action = torch.argmax(actions)
+                final_action = final_action.item()
+                #print(final_action)
 
-            final_action = indice_max_probabilidad(actions.cpu().detach().numpy())
-            final_action = final_action.item()
-            #print(final_action)
+                n_state, reward, done, truncated, info = env.step(final_action)
+                score += reward
+                state = n_state
+                if info["lives"] < 3:
+                    break
+                
+                #end = time.time()
+                #print(f"time: {(end-start)}")
 
-            n_state, reward, done, truncated, info = env.step(final_action)
-            state = n_state
-            score += reward
-
-        # Move any calculated gradients back to CPU before returning
-        if network.training:
-            network.zero_grad()
-        genome.fitness = score
-        return genome.fitness
+            genome.fitness = score
+            return genome.fitness
 
     def train(self, epochs: int, goal: float, distance_t: float, output_file: str):
         with open(output_file, "w") as f:
@@ -79,9 +85,15 @@ class NEAT(nn.Module):
                 print(f"Epoch {episode}: Best Fitness: {best_fit}, Goal: {goal}")
                 break
             
-            for i in range(len(self.genomes)):
+            count_genomes = len(self.genomes)
+            for i in range(count_genomes):
                 print(f"genome:{i}")
+                
+                start = time.time()
                 curr_fit = self.evaluate_genome(self.genomes[i])
+                end = time.time()
+                
+                print(f"TIME: {(end-start)}")
                 
                 if curr_fit >= best_fit:
                     best_fit = curr_fit

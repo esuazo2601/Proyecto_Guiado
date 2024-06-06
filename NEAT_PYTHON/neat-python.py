@@ -2,6 +2,7 @@ import gymnasium as gym
 import neat
 import numpy as np
 import os
+import time
 
 def softmax(x):
     """Compute softmax values for each sets of scores in x."""
@@ -48,6 +49,7 @@ class MyReporter(neat.StatisticsReporter):
         super().post_evaluate(config, population, species, best_genome)
 
 def eval_genome(genomes, config):
+    start = time.time()
     env = gym.make('ALE/SpaceInvaders-v5', render_mode = "rgb_array")  # Crear el ambiente Space Invaders
     for genome_id, genome in genomes:
         observation = env.reset()  # Reiniciar el ambiente
@@ -70,6 +72,8 @@ def eval_genome(genomes, config):
             total_reward += reward  # Acumular el premio
         
         genome.fitness = total_reward
+        end = time.time()
+        print(f"TIME: {(end-start)}")
 
 def train(config_file):
     # Cargar configuración NEAT

@@ -1,0 +1,1 @@
+epoch;prom_fit;std_dev;max_fit

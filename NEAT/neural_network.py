@@ -1,4 +1,9 @@
 from .genome import Genome
+from typing import Self
+import numpy as np
+import torch.nn as nn
+import torch.nn.functional as F
+import torch
 import torch
 import torch.nn.functional as F
 import torch.nn as nn
@@ -6,16 +11,12 @@ import torch.nn as nn
 # Funciones de activación usando PyTorch
 def relu(x):
     return F.relu(x)
-
 def leaky_relu(x):
     return F.leaky_relu(x, negative_slope=0.01)
-
 def tanh(x):
-    return torch.tanh(x)
-
+    return F.tanh(x)
 def identity(x):
     return x
-
 def softmax(x):
     return F.softmax(x, dim=0)
 
@@ -40,7 +41,7 @@ ready = {self.ready}
         """
 
 class NeuralNetwork(nn.Module):
-    def __init__(self, genome: Genome, device: torch.device):
+    def __init__(self, genome: Genome, device: torch.device) -> torch.Tensor:
         super(NeuralNetwork,self).__init__()
         self.neuron: dict[int, Neuron] = {}
         self.outputs = []
@@ -55,6 +56,8 @@ class NeuralNetwork(nn.Module):
             elif n.type == "INPUT":
                 node.ready = True
                 self.inputs.append(node)
+        
+        self.to(device=device)
 
         for n, conn in genome.connections.genes.items():
             if not conn.Enabled:
@@ -93,5 +96,6 @@ class NeuralNetwork(nn.Module):
 
         # Get the values of the output nodes and apply the softmax function
         output_values = [x.value for x in self.outputs]
-        return softmax(torch.stack(output_values))
+        output_values = torch.tensor(output_values,dtype=torch.float)
+        return softmax(output_values)
 
