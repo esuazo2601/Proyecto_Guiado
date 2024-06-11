@@ -4,9 +4,6 @@ import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
 import torch
-import torch
-import torch.nn.functional as F
-import torch.nn as nn
 import random
 
 # Funciones de activación usando PyTorch
@@ -22,7 +19,6 @@ def softmax(x):
     return F.softmax(x, dim=0)
 def sigmoid(x):
     return 1/(1 + np.exp(-x))
-
 
 class Neuron(nn.Module):
     def __init__(self, type: str, device: torch.device) -> None:
@@ -72,11 +68,14 @@ class NeuralNetwork(nn.Module):
 
             _in = conn.Input
             _out = conn.Output
-            
-            while self.neuron[_in] is None:
-                _in = random.randint(0,len(self.neuron)-1)
-            while self.neuron[_out] is None:
-                _out = random.randint(0,len(self.neuron)-1)
+
+            valid_in = [i for i in self.neuron.keys()]
+            valid_out = [i for i in self.neuron.keys()]
+
+            if _in not in valid_in:
+                _in = random.choice(valid_in)
+            if _out not in valid_out:
+                _out = random.choice(valid_out)
             
             weight = conn.Weight
             self.neuron[_out].input.append(self.neuron[_in])
@@ -85,7 +84,8 @@ class NeuralNetwork(nn.Module):
 
     def forward(self, _input: dict[int]):
         for i, value in _input.items():
-            self.neuron[i].value = value
+            if i in self.neuron:
+                self.neuron[i].value = value
 
         queue = self.outputs.copy()
         while queue:
