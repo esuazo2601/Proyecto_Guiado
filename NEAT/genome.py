@@ -1,12 +1,16 @@
 from .connection_genes import ConnectionGenes, Connection
 from .node_genes import NodeGenes, Genes
 import random
+import copy
 
 class Genome():
     def __init__(self, inputSize, outputSize):                                  # Cada Genome dispone de dos elementos:
         self.nodes: NodeGenes = NodeGenes(inputSize, outputSize)                # "Lista" de NodeGenes
         self.connections: ConnectionGenes = ConnectionGenes(self.nodes)         # "Lista" de ConnectionGenes
-        self.fitness: float = 0                                                 # Basado en el rendimiento
+        self.fitness: float = 0  # Basado en el rendimiento
+        self.age = 0
+        self.inputSize = inputSize
+        self.outputSize = outputSize                                             
 
     # Decide si mutar o no y que mutar especificamente
     def mutate(self):
@@ -53,3 +57,10 @@ class Genome():
                         new_weight = random.randrange(-100, 100) * 0.01 
 
                 self.connections.mutate_weight(new_weight, conn)
+
+    def copy(self):
+        new_genome = Genome(self.inputSize, self.outputSize)
+        new_genome.nodes = copy.deepcopy(self.nodes)
+        new_genome.connections = copy.deepcopy(self.connections)
+        new_genome.fitness = self.fitness
+        return new_genome

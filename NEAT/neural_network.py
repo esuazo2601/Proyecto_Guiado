@@ -72,10 +72,12 @@ class NeuralNetwork(nn.Module):
 
             _in = conn.Input
             _out = conn.Output
-
-            _in = min(_in, inputSize + outputSize)
-            _out = min(_out, inputSize + outputSize)
-
+            
+            if self.neuron[_in] is None:
+                _in = conn.Input-1
+            if self.neuron[_out] is None:
+                _out = conn.Output-1
+            
             weight = conn.Weight
             self.neuron[_out].input.append(self.neuron[_in])
             self.neuron[_in].output.append(self.neuron[_out])

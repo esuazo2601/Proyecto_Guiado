@@ -123,19 +123,55 @@ class NEAT(nn.Module):
         else:
             print("Error")
 
+    #def next_generation(self, distance_t: float):
+    #    new_generation: list[Genome] = []
+    #    population_no_crossover = int(self.population_size * .05)
+    #    
+    #    for i in range(population_no_crossover):
+    #        rand_genome = random.choice(self.genomes)
+    #        rand_genome.mutate()
+    #        new_generation.append(rand_genome)
+    #
+    #    new_species = Species(distance_t, self.genomes, self.C1, self.C2, self.C3)
+    #    
+    #    new_generation.extend(new_species.speciation(self.population_size - population_no_crossover))
+    #    self.genomes = new_generation 
+
     def next_generation(self, distance_t: float):
         new_generation: list[Genome] = []
-        population_no_crossover = int(self.population_size * .05)
         
-        for i in range(population_no_crossover):
+        # Se calcula la cantidad de elites
+        elitism_part = int(self.population_size * 0.2)
+        
+        # Se ordenan de acuerdo al fitness y se extrae esa parte
+        sorted_genomes = sorted(self.genomes, key=lambda g: g.fitness, reverse=True)
+        elites = sorted_genomes[:elitism_part]
+        
+        # Se añaden las elites a la generación
+        new_generation.extend(elites)
+        
+        # Generar nuevos genomas a través de mutación
+        population_mutated = int(self.population_size * 0.05)
+        for _ in range(population_mutated):
             rand_genome = random.choice(self.genomes)
-            rand_genome.mutate()
-            new_generation.append(rand_genome)
-
-        new_species = Species(distance_t, self.genomes, self.C1, self.C2, self.C3)
+            new_genome = rand_genome.copy()  # Copiar el genoma antes de mutar
+            new_genome.mutate()
+            new_generation.append(new_genome)
         
-        new_generation.extend(new_species.speciation(self.population_size - population_no_crossover))
+        # Crear nuevas especies y añadirlas a la nueva generación
+        new_species = Species(distance_t, self.genomes, self.C1, self.C2, self.C3)
+        new_generation.extend(new_species.speciation(self.population_size - len(new_generation)))
+        
+        # Asegurarse de que la nueva generación tiene el tamaño correcto
+        while len(new_generation) < self.population_size:
+            rand_genome = random.choice(self.genomes)
+            new_genome = rand_genome.copy()  # Copiar el genoma antes de mutar
+            new_genome.mutate()
+            new_generation.append(new_genome)
+        
+        # Actualizar self.genomes con la nueva generación
         self.genomes = new_generation
+
 
     def save_genomes(self, name: str):
         if not os.path.isdir("./saved_model"):
