@@ -73,10 +73,10 @@ class NeuralNetwork(nn.Module):
             _in = conn.Input
             _out = conn.Output
             
-            if self.neuron[_in] is None:
-                _in = conn.Input-1
-            if self.neuron[_out] is None:
-                _out = conn.Output-1
+            while self.neuron[_in] is None:
+                _in = random.randint(0,len(self.neuron)-1)
+            while self.neuron[_out] is None:
+                _out = random.randint(0,len(self.neuron)-1)
             
             weight = conn.Weight
             self.neuron[_out].input.append(self.neuron[_in])
