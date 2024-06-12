@@ -31,6 +31,6 @@ if __name__ == '__main__':
         #env=env,
         epochs=200,
         goal=1100,
-        distance_t=0.05,
+        distance_t=0.1,
         output_file="fitness_history_1.txt"
     )

@@ -31,6 +31,7 @@ class NeuralNetwork(nn.Module):
         self.device = device
         self.input_size = inputSize
         self.output_size = outputSize
+        self.to(device=device)
 
         # Inicializar neuronas
         for n in genome.nodes.genes:
@@ -50,12 +51,18 @@ class NeuralNetwork(nn.Module):
                 _in = conn.Input
                 _out = conn.Output
                 weight = torch.tensor(conn.Weight, device=device)
-
                 self.neuron[_out].input.append(self.neuron[_in])
                 self.neuron[_in].output.append(self.neuron[_out])
                 self.neuron[_in].weight[self.neuron[_out]] = weight
             except KeyError as e:
                 print(f"Error: {e}")
+            #if _in in self.neuron and _out in self.neuron:
+            #    weight = torch.tensor(conn.Weight, device=device)
+            #    self.neuron[_out].input.append(self.neuron[_in])
+            #    self.neuron[_in].output.append(self.neuron[_out])
+            #    self.neuron[_in].weight[self.neuron[_out]] = weight
+            #else:
+            #    print(f"Warning: Invalid connection from {_in} to {_out} - Neuron not found.")
 
     def forward(self, _input: Dict[int, float]):
         for i, value in _input.items():

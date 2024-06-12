@@ -19,6 +19,8 @@ import time
 
 class NEAT(nn.Module):
     def __init__(self, inputSize: int, outputSize: int, populationSize: int, C1: float, C2: float, C3: float, device:torch.DeviceObjType):
+        self.env = gym.make("SpaceInvaders-ramDeterministic-v4")
+        self.env = gym.wrappers.TimeLimit(self.env, max_episode_steps=200)
         super(NEAT,self).__init__()
         self.input_size: int = inputSize
         self.output_size: int = outputSize
@@ -36,87 +38,79 @@ class NEAT(nn.Module):
 
         self.best_genome: Genome = None
 
-    def evaluate_genome(self,genome):
-            env = gym.make("SpaceInvaders-ramDeterministic-v4")
-            #env = FlattenObservation(env)
-            network = NeuralNetwork(genome,self.input_size, self.output_size, self.device )  # Move network to GPU
-            network.to(self.device)  # Ensure weights and biases are on GPU
-            
-            state,info = env.reset()
-            #print(state)
-            done = False
-            score = 0
+    def evaluate_genome(self, genome):
+        network = NeuralNetwork(genome, self.input_size, self.output_size, self.device)
+        network.to(self.device)
+        
+        state, info = self.env.reset()
+        done = False
+        truncated = False  # Inicializar la variable truncated
+        score = 0
+        
+        while not done and not truncated:
+            # Convertir el estado a un tensor de PyTorch
+            #state_tensor = torch.tensor(state, dtype=torch.float32).to(self.device)
+            state = {i: state[i] for i in range(len(state))}
+            actions = network.forward(state)
+            final_action = torch.argmax(actions).item()
+            #print(final_action)
+            n_state, reward, done, truncated, info = self.env.step(final_action)
+            score += reward
+            state = n_state
+        
+        genome.fitness = score
+        return genome.fitness
 
-            while not done or truncated:
-                #start = time.time()
-                #state_tensor = torch.tensor(state, dtype=torch.int).to(self.device)
-                #print(obs_ram_tensor)
-
-                state = {i: state[i] for i in range(len(state))}
-                actions = network.forward(state)
-
-                final_action = torch.argmax(actions)
-                final_action = final_action.item()
-                #print(final_action)
-
-                n_state, reward, done, truncated, info = env.step(final_action)
-                score += reward
-                state = n_state
-                
-                #end = time.time()
-                #print(f"time: {(end-start)}")
-
-            genome.fitness = score
-            return genome.fitness
 
     def train(self, epochs: int, goal: float, distance_t: float, output_file: str):
-        with open(output_file, "w") as f:
-            f.write("epoch;prom_fit;std_dev;max_fit\n")
+            with open(output_file, "w") as f:
+                f.write("epoch;prom_fit;std_dev;max_fit\n")
 
-        print(f"goal: {goal}, epochs: {epochs}, genomes: {len(self.genomes)}")
-        best_fit: float = 0
+            print(f"goal: {goal}, epochs: {epochs}, genomes: {len(self.genomes)}")
+            best_fit: float = 0
 
-        for episode in range(1, epochs + 1):
-            fits_epoch = []
-            print(f"episode: {episode}\n")
+            for episode in range(1, epochs + 1):
+                fits_epoch = []
+                print(f"episode: {episode}\n")
 
-            if best_fit >= goal:
-                self.save_genomes("results_" + str(epochs))
-                print(f"Epoch {episode}: Best Fitness: {best_fit}, Goal: {goal}")
-                break
-            
-            count_genomes = len(self.genomes)
-            for i in range(count_genomes):
-                print(f"genome:{i}")
+                if best_fit >= goal:
+                    self.save_genomes("results_" + str(epochs))
+                    print(f"Epoch {episode}: Best Fitness: {best_fit}, Goal: {goal}")
+                    break
                 
-                start = time.time()
-                curr_fit = self.evaluate_genome(self.genomes[i])
-                end = time.time()
+                count_genomes = len(self.genomes)
+                for i in range(count_genomes):
+                    print(f"genome:{i}")
+                    
+                    start = time.time()
+                    curr_fit = self.evaluate_genome(self.genomes[i])
+                    end = time.time()
+                    
+                    print(f"TIME: {(end-start)}")
+                    
+                    if curr_fit >= best_fit:
+                        best_fit = curr_fit
+                        self.best_genome = self.genomes[i]
+                    
+                    fits_epoch.append(curr_fit)
+
+                prom = np.mean(fits_epoch)
+                std_dev = np.std(fits_epoch)
+                max_fit = np.max(fits_epoch)
                 
-                print(f"TIME: {(end-start)}")
-                
-                if curr_fit >= best_fit:
-                    best_fit = curr_fit
-                    self.best_genome = self.genomes[i]
-                
-                fits_epoch.append(curr_fit)
+                ep = str(episode)
+                prom = str(prom)
+                std_dev = "{:.3f}".format(std_dev)
+                max_fit = str(max_fit)
 
-            prom = np.mean(fits_epoch)
-            std_dev = np.std(fits_epoch)
-            max_fit = np.max(fits_epoch)
-            
-            ep = str(episode)
-            prom = str(prom)
-            std_dev = "{:.3f}".format(std_dev)
-            max_fit = str(max_fit)
+                with open(output_file, 'a') as f:
+                    f.write(ep + ";" + prom + ";" + std_dev + ";" + max_fit + "\n")
 
-            with open(output_file, 'a') as f:
-                f.write(ep + ";" + prom + ";" + std_dev + ";" + max_fit + "\n")
+                if episode%50 == 0:
+                    self.save_genomes(f"save_ep:{episode}")
+                self.next_generation(distance_t)
 
-            if episode%50 == 0:
-                self.save_genomes(f"save_ep:{episode}")
-            self.next_generation(distance_t)
-
+    
     def test(self, _input: dict):
         if self.best_genome is not None:
             network = NeuralNetwork(self.best_genome, self.device)
