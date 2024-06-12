@@ -13,7 +13,6 @@ class Connection():
     def copy(self):
         return self.Input, self.Output, self.Weight, self.Enabled, self.Innovation
 
-
 class ConnectionGenes(NodeGenes):
     def __init__(self, nodes: NodeGenes):
         self.genes: dict[(int, int)] = {}

@@ -62,8 +62,6 @@ class NEAT(nn.Module):
                 n_state, reward, done, truncated, info = env.step(final_action)
                 score += reward
                 state = n_state
-                if info["lives"] < 3:
-                    break
                 
                 #end = time.time()
                 #print(f"time: {(end-start)}")
@@ -91,11 +89,11 @@ class NEAT(nn.Module):
             for i in range(count_genomes):
                 print(f"genome:{i}")
                 
-                start = time.time()
+                #start = time.time()
                 curr_fit = self.evaluate_genome(self.genomes[i])
-                end = time.time()
+                #end = time.time()
                 
-                print(f"TIME: {(end-start)}")
+                #print(f"TIME: {(end-start)}")
                 
                 if curr_fit >= best_fit:
                     best_fit = curr_fit
@@ -114,6 +112,9 @@ class NEAT(nn.Module):
 
             with open(output_file, 'a') as f:
                 f.write(ep + ";" + prom + ";" + std_dev + ";" + max_fit + "\n")
+
+            if episode%50 == 0:
+                self.save_genomes(f"save_ep:{episode}")
             self.next_generation(distance_t)
 
     def test(self, _input: dict):
