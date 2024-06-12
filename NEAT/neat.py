@@ -89,11 +89,11 @@ class NEAT(nn.Module):
             for i in range(count_genomes):
                 print(f"genome:{i}")
                 
-                #start = time.time()
+                start = time.time()
                 curr_fit = self.evaluate_genome(self.genomes[i])
-                #end = time.time()
+                end = time.time()
                 
-                #print(f"TIME: {(end-start)}")
+                print(f"TIME: {(end-start)}")
                 
                 if curr_fit >= best_fit:
                     best_fit = curr_fit
