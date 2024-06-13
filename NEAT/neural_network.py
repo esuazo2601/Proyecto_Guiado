@@ -1,18 +1,36 @@
 from .genome import Genome
-from typing import List, Dict
-import torch.nn as nn
-import torch.nn.functional as F
-import torch
+from typing import List, Dict, Self
+import numpy as np
+import math
+# Funciones de activacion
+def sig(x):
+ return 1/(1 + np.exp(-x))
 
-class Neuron(nn.Module):
-    def __init__(self, type: str, device: torch.device) -> None:
-        super(Neuron, self).__init__()
-        self.input: List[Neuron] = []
-        self.output: List[Neuron] = []
-        self.value: torch.Tensor = torch.tensor(0.0, device=device)
-        self.weight: Dict[Neuron, torch.Tensor] = {}
-        self.type = type
-        self.device = device
+def relu(x):
+    return max(0.0, x)
+
+def leaky_relu(x):
+  if x>0 :
+    return x
+  else :
+    return 0.01*x
+
+def tanh(x):
+    return math.tanh(x)
+
+def indentity(x):
+    return x
+
+def softmax(x):
+    np.exp(x)/sum(np.exp(x))
+
+class Neuron():
+    def __init__(self, type: str) -> None:
+        self.input: List[Self] = []
+        self.output: List[Self] = []
+        self.value: float = 0
+        self.weight: Dict[Self] = {}
+        self.type = False
 
     def __str__(self):
         return f"""
@@ -22,25 +40,23 @@ class Neuron(nn.Module):
         type = {self.type}
         """
 
-class NeuralNetwork(nn.Module):
-    def __init__(self, genome: Genome, inputSize: int, outputSize: int, device: torch.device):
-        super(NeuralNetwork, self).__init__()
+class NeuralNetwork():
+    def __init__(self, genome: Genome, inputSize: int, outputSize: int):
         self.neuron: Dict[int, Neuron] = {}
-        self.outputs: List[Neuron] = []
-        self.inputs: List[Neuron] = []
-        self.device = device
+        self.outputs = []
+        self.inputs = []
         self.input_size = inputSize
         self.output_size = outputSize
-        self.to(device=device)
 
         # Inicializar neuronas
         for n in genome.nodes.genes:
-            node = Neuron(n.type, device=device)
+            node = Neuron(n)
+            node.type = n.type
             self.neuron[n.id] = node
             if n.type == "OUTPUT":
                 self.outputs.append(node)
             elif n.type == "INPUT":
-                node.value = torch.tensor(1.0, device=device)  # Inputs are ready with a value of 1
+                node.ready = True 
                 self.inputs.append(node)
 
         # Inicializar conexiones
@@ -50,36 +66,33 @@ class NeuralNetwork(nn.Module):
             try:
                 _in = conn.Input
                 _out = conn.Output
-                weight = torch.tensor(conn.Weight, device=device)
+                _weight = conn.Weight
                 self.neuron[_out].input.append(self.neuron[_in])
                 self.neuron[_in].output.append(self.neuron[_out])
-                self.neuron[_in].weight[self.neuron[_out]] = weight
+                self.neuron[_in].weight[self.neuron[_out]] = _weight
             except KeyError as e:
                 print(f"Error: {e}")
-            #if _in in self.neuron and _out in self.neuron:
-            #    weight = torch.tensor(conn.Weight, device=device)
-            #    self.neuron[_out].input.append(self.neuron[_in])
-            #    self.neuron[_in].output.append(self.neuron[_out])
-            #    self.neuron[_in].weight[self.neuron[_out]] = weight
-            #else:
-            #    print(f"Warning: Invalid connection from {_in} to {_out} - Neuron not found.")
 
-    def forward(self, _input: Dict[int, float]):
-        for i, value in _input.items():
-            if i in self.neuron:
-                self.neuron[i].value = torch.tensor(value, device=self.device)
+    def forward(self, _input: dict[int]):
+            for i, value in _input.items():
+                self.neuron[i].value = value
 
-        queue = self.outputs.copy()
-        while queue:
-            n = queue.pop()
-            for i in n.input:
-                if i.value is not None:
-                    n.value += i.value * i.weight[n]
+            queue = []
+            for n in self.outputs:
+                queue.append(n)
+            while len(queue) != 0:
+                n = queue.pop()
+                n.ready = True
+                for i in n.input:
+                    if i.ready:
+                        n.value += i.value*i.weight[n]
+                    else:
+                        n.ready = False
+                        queue.insert(0, i)
+                if n.ready:
+                    if n.type != "INPUT":
+                        n.value = leaky_relu(n.value)
                 else:
-                    queue.insert(0, i)
-            if n.type != "INPUT":
-                n.value = torch.sigmoid(n.value)
-
-        output_values = [x.value for x in self.outputs]
-        output_values = torch.stack(output_values)
-        return F.softmax(output_values, dim=0)
+                    queue.insert(0, n)
+            output_values = [x.value for x in self.outputs]
+            return softmax(output_values)

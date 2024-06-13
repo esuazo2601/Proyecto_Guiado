@@ -1,11 +1,9 @@
 from .node_genes import NodeGenes, Genes
 from .innovation import Innovation as inn_num
 import random
-from torch import nn
 
-class Connection(nn.Module):
+class Connection():
     def __init__(self, Input: int, Output: int, Weight: float, Innovation: int):
-        super(Connection,self).__init__()
         self.Input = Input              # Nodo de Entrada
         self.Output = Output            # Nodo de Salida
         self.Weight = Weight            # Peso de la Conexion

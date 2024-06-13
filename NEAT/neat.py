@@ -4,28 +4,20 @@ from .node_genes import NodeGenes
 from .genome import Genome
 from .species import Species
 import numpy as np
-from .utils import indice_max_probabilidad
 import pickle
 import random
 from .neural_network import NeuralNetwork
-import torch
-import torch.nn as nn
-import torch.multiprocessing as mp
 import gymnasium as gym
-import torch
-import torch.nn.functional as F
-from gymnasium.wrappers import FlattenObservation
 import time
+import numpy as np
 
-class NEAT(nn.Module):
-    def __init__(self, inputSize: int, outputSize: int, populationSize: int, C1: float, C2: float, C3: float, device:torch.DeviceObjType):
+class NEAT():
+    def __init__(self, inputSize: int, outputSize: int, populationSize: int, C1: float, C2: float, C3: float):
         self.env = gym.make("SpaceInvaders-ramDeterministic-v4")
-        self.env = gym.wrappers.TimeLimit(self.env, max_episode_steps=200)
-        super(NEAT,self).__init__()
+        #self.env = gym.wrappers.TimeLimit(self.env, max_episode_steps=200)
         self.input_size: int = inputSize
         self.output_size: int = outputSize
         self.population_size: int = populationSize
-        self.device = device
 
         self.genomes: list[Genome] = []
         for i in range(populationSize):
@@ -39,21 +31,16 @@ class NEAT(nn.Module):
         self.best_genome: Genome = None
 
     def evaluate_genome(self, genome):
-        network = NeuralNetwork(genome, self.input_size, self.output_size, self.device)
-        network.to(self.device)
-        
+        network = NeuralNetwork(genome, self.input_size, self.output_size)
         state, info = self.env.reset()
         done = False
         truncated = False  # Inicializar la variable truncated
         score = 0
         
         while not done and not truncated:
-            # Convertir el estado a un tensor de PyTorch
-            #state_tensor = torch.tensor(state, dtype=torch.float32).to(self.device)
             state = {i: state[i] for i in range(len(state))}
             actions = network.forward(state)
-            final_action = torch.argmax(actions).item()
-            #print(final_action)
+            final_action = np.argmax(actions)
             n_state, reward, done, truncated, info = self.env.step(final_action)
             score += reward
             state = n_state
@@ -113,7 +100,7 @@ class NEAT(nn.Module):
     
     def test(self, _input: dict):
         if self.best_genome is not None:
-            network = NeuralNetwork(self.best_genome, self.device)
+            network = NeuralNetwork(self.best_genome)
             network.forward(_input)
         else:
             print("Error")
