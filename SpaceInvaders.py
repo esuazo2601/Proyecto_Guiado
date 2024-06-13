@@ -8,7 +8,7 @@ if __name__ == '__main__':
     model = NEAT(
         inputSize=128,
         outputSize=6,
-        populationSize=150,
+        populationSize=10,
         C1=1.2,
         C2=2.3,
         C3=3.5,

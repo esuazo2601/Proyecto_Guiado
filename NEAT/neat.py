@@ -41,6 +41,7 @@ class NEAT():
             state = {i: state[i] for i in range(len(state))}
             actions = network.forward(state)
             final_action = np.argmax(actions)
+            #print(final_action)
             n_state, reward, done, truncated, info = self.env.step(final_action)
             score += reward
             state = n_state
@@ -72,7 +73,7 @@ class NEAT():
                     start = time.time()
                     curr_fit = self.evaluate_genome(self.genomes[i])
                     end = time.time()
-                    
+                    #print(curr_fit)
                     print(f"TIME: {(end-start)}")
                     
                     if curr_fit >= best_fit:
@@ -80,6 +81,7 @@ class NEAT():
                         self.best_genome = self.genomes[i]
                     
                     fits_epoch.append(curr_fit)
+                    #print(fits_epoch)
 
                 prom = np.mean(fits_epoch)
                 std_dev = np.std(fits_epoch)
@@ -128,6 +130,7 @@ class NEAT():
         # Se ordenan de acuerdo al fitness y se extrae esa parte
         sorted_genomes = sorted(self.genomes, key=lambda g: g.fitness, reverse=True)
         elites = sorted_genomes[:elitism_part]
+        #print(elites)
         
         # Se añaden las elites a la generación
         new_generation.extend(elites)

@@ -1,1 +1,2 @@
 epoch;prom_fit;std_dev;max_fit
+1;87.0;102.669;285.0

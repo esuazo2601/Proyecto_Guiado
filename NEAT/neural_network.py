@@ -21,8 +21,8 @@ def tanh(x):
 def indentity(x):
     return x
 
-def softmax(x):
-    np.exp(x)/sum(np.exp(x))
+def softmax_stable(x):
+    return(np.exp(x - np.max(x)) / np.exp(x - np.max(x)).sum())
 
 class Neuron():
     def __init__(self, type: str) -> None:
@@ -92,8 +92,11 @@ class NeuralNetwork():
                         queue.insert(0, i)
                 if n.ready:
                     if n.type != "INPUT":
-                        n.value = leaky_relu(n.value)
+                        n.value = sig(n.value)
                 else:
                     queue.insert(0, n)
             output_values = [x.value for x in self.outputs]
-            return softmax(output_values)
+            output_values = np.array(output_values)
+            final_values = softmax_stable(output_values)
+            #print(f"final: {final_values}")
+            return final_values
