@@ -30,7 +30,8 @@ class Neuron():
         self.output: List[Self] = []
         self.value: float = 0
         self.weight: Dict[Self] = {}
-        self.type = False
+        self.type = type
+        self.ready = False
 
     def __str__(self):
         return f"""
