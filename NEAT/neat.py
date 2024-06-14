@@ -27,7 +27,7 @@ class NEAT():
         self.C1: float = C1
         self.C2: float = C2
         self.C3: float = C3
-
+        self.best_fit: float = 0
         self.best_genome: Genome = None
 
     def evaluate_genome(self, genome):
@@ -55,15 +55,15 @@ class NEAT():
                 f.write("epoch;prom_fit;std_dev;max_fit\n")
 
             print(f"goal: {goal}, epochs: {epochs}, genomes: {len(self.genomes)}")
-            best_fit: float = 0
+
 
             for episode in range(1, epochs + 1):
                 fits_epoch = []
                 print(f"episode: {episode}\n")
 
-                if best_fit >= goal:
+                if self.best_fit >= goal:
                     self.save_genomes("results_" + str(epochs))
-                    print(f"Epoch {episode}: Best Fitness: {best_fit}, Goal: {goal}")
+                    print(f"Epoch {episode}: Best Fitness: {self.best_fit}, Goal: {goal}")
                     break
                 
                 count_genomes = len(self.genomes)
@@ -76,8 +76,8 @@ class NEAT():
                     #print(curr_fit)
                     print(f"TIME: {(end-start)}")
                     
-                    if curr_fit >= best_fit:
-                        best_fit = curr_fit
+                    if curr_fit > self.best_fit:
+                        self.best_fit = curr_fit
                         self.best_genome = self.genomes[i]
                     
                     fits_epoch.append(curr_fit)
@@ -102,7 +102,7 @@ class NEAT():
     
     def test(self, _input: dict):
         if self.best_genome is not None:
-            network = NeuralNetwork(self.best_genome)
+            network = NeuralNetwork(self.best_genome,self.input_size,self.output_size)
             network.forward(_input)
         else:
             print("Error")
@@ -178,6 +178,7 @@ class NEAT():
             self.C2 = model.C2
             self.C3 = model.C3
             self.best_genome = model.best_genome
+            print("Loaded genomes correctly")
         else:
             print("Error")
 
