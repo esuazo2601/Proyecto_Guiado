@@ -13,7 +13,7 @@ import numpy as np
 
 class NEAT():
     def __init__(self, inputSize: int, outputSize: int, populationSize: int, C1: float, C2: float, C3: float):
-        self.env = gym.make("SpaceInvaders-ramDeterministic-v4")
+        self.env = gym.make("SpaceInvaders-ramDeterministic-v4",render_mode="human")
         #self.env = gym.wrappers.TimeLimit(self.env, max_episode_steps=200)
         self.input_size: int = inputSize
         self.output_size: int = outputSize
@@ -31,7 +31,7 @@ class NEAT():
         self.best_genome: Genome = None
 
     def evaluate_genome(self, genome):
-        network = NeuralNetwork(genome, self.input_size, self.output_size)
+        network = NeuralNetwork(genome)
         state, info = self.env.reset()
         done = False
         truncated = False  # Inicializar la variable truncated
