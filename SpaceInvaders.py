@@ -8,15 +8,15 @@ if __name__ == '__main__':
     model = NEAT(
         inputSize=128,
         outputSize=6,
-        populationSize=10,
+        populationSize=150,
         C1=1.2,
         C2=2.3,
         C3=3.5,
     )
     model.train(
         #env=env,
-        epochs=200,
-        goal=1100,
-        distance_t=0.1,
+        epochs=300,
+        goal=800,
+        distance_t=0.13,
         output_file="fitness_history_1.txt"
     )

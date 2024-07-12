@@ -24,6 +24,14 @@ def softmax(x):
     e_x = np.exp(x - np.max(x))
     return e_x / e_x.sum()
 
+def stable_softmax(x):
+    z = x - max(x)
+    numerator = np.exp(z)
+    denominator = np.sum(numerator)
+    softmax = numerator / denominator
+
+    return softmax
+
 class Neuron:
     def __init__(self, type: str) -> None:
         self.input: list[Self] = []

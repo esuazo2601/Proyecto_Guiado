@@ -13,7 +13,7 @@ import numpy as np
 
 class NEAT():
     def __init__(self, inputSize: int, outputSize: int, populationSize: int, C1: float, C2: float, C3: float):
-        self.env = gym.make("SpaceInvaders-ramDeterministic-v4",render_mode="human")
+        self.env = gym.make("SpaceInvaders-ramDeterministic-v4",render_mode=None)
         #self.env = gym.wrappers.TimeLimit(self.env, max_episode_steps=200)
         self.input_size: int = inputSize
         self.output_size: int = outputSize
@@ -40,12 +40,14 @@ class NEAT():
         while not done and not truncated:
             state = {i: state[i] for i in range(len(state))}
             actions = network.forward(state)
+            #print(actions)
             final_action = np.argmax(actions)
             #print(final_action)
             n_state, reward, done, truncated, info = self.env.step(final_action)
             score += reward
             state = n_state
-        
+            
+        print("Score: ",score)    
         genome.fitness = score
         return genome.fitness
 
