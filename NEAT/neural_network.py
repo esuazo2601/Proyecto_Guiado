@@ -20,9 +20,8 @@ def indentity(x):
     return x
 
 def softmax(x):
-    """Compute softmax values for each set of scores in x."""
-    e_x = np.exp(x - np.max(x))
-    return e_x / e_x.sum()
+    """Compute softmax values for each sets of scores in x."""
+    return np.exp(x) / np.sum(np.exp(x), axis=0)
 
 def stable_softmax(x):
     z = x - max(x)
@@ -110,7 +109,7 @@ class NeuralNetwork:
                     queue.insert(0, i)
                     break
             if n.ready and n.type != "INPUT":
-                n.value = relu(n.value)
+                n.value = tanh(n.value)
 
         # Collect and return the output values, normalized with softmax
         output_values = [x.value for x in self.outputs]
