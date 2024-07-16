@@ -33,13 +33,12 @@ class NEAT:
         state, _ = env.reset()
         score = 0
         done = False
-        obs_ram = env.unwrapped.ale.getRAM()
-
+        
         while not done:
-            dict_input = {i: int(valor) for i, valor in enumerate(obs_ram)}
+            dict_input = {i: int(valor) for i, valor in enumerate(state)}
             action = np.argmax(genome.network.forward(dict_input))
-            state, reward, terminated, truncated, _ = env.step(action)
-            obs_ram = env.unwrapped.ale.getRAM()
+            n_state, reward, terminated, truncated, _ = env.step(action)
+            state = n_state
             score += reward
             done = terminated or truncated
 
