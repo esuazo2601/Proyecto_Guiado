@@ -49,31 +49,29 @@ class MyReporter(neat.StatisticsReporter):
         super().post_evaluate(config, population, species, best_genome)
 
 def eval_genome(genomes, config):
-    start = time.time()
-    env = gym.make('ALE/SpaceInvaders-v5', render_mode = "rgb_array")  # Crear el ambiente Space Invaders
+    #start = time.time()
+    env = gym.make('SpaceInvaders-ramDeterministic-v4', render_mode = None)  # Crear el ambiente Space Invaders
     for genome_id, genome in genomes:
-        observation = env.reset()  # Reiniciar el ambiente
+        state,_ = env.reset()  # Reiniciar el ambiente
         #print("Genome: ", genome_id)
         genome.fitness = 0
         net = neat.nn.FeedForwardNetwork.create(genome, config)  # Crear la red neuronal
 
         total_reward = 0
         done = False
-        obs_ram = env.unwrapped.ale.getRAM()
-
+        
         while not done:
             #env.render()
-            output =  net.activate(obs_ram)  # Activar la red neuronal para obtener la acción
+            output =  net.activate(state)  # Activar la red neuronal para obtener la acción
             softmaxed = softmax(output)
             action = indice_max_probabilidad(softmaxed)
-
-            observation, reward, done, truncated, info = env.step(action)  # Ejecutar la acción en el ambiente
-            obs_ram = env.unwrapped.ale.getRAM()
+            n_state, reward, done, truncated, info = env.step(action)  # Ejecutar la acción en el ambiente
+            state = n_state
             total_reward += reward  # Acumular el premio
         
         genome.fitness = total_reward
-        end = time.time()
-        print(f"TIME: {(end-start)}")
+        #end = time.time()
+        #print(f"TIME: {(end-start)}")
 
 def train(config_file):
     # Cargar configuración NEAT
@@ -100,7 +98,7 @@ def train(config_file):
     # Mostrar el mejor genoma
     print('\nBest genome:\n{!s}'.format(winner))
 
-config_path = 'NEAT_PYTHON/config.txt'
+config_path = 'config.txt'
 
 # Entrenar la red neuronal utilizando NEAT
 if __name__ == '__main__':
