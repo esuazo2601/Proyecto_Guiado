@@ -89,6 +89,9 @@ class Species():
     # Recibe dos Genomas, los cuales al aparearse crearan un nuevo Genoma
     def cross_over(self, parent1: Genome, parent2: Genome):
         offspring: Genome = Genome(0, 0)
+
+        if parent2.fitness > parent1.fitness:
+            parent1,parent2 = parent2, parent1
         
         conn_parent1: dict[int] = {}
         for _, conn1 in parent1.connections.genes.items():
@@ -140,7 +143,7 @@ class Species():
             offspring.connections.node_count = nodes_size2
 
         #* Agrega el promedio de ambos Padres al Fitness del Retonyo
-        offspring.fitness = (parent1.fitness + parent2.fitness) / 2
+        #offspring.fitness = (parent1.fitness + parent2.fitness) / 2
         
         #* Retorna el Genoma resultante
         return offspring

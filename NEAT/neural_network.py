@@ -24,12 +24,12 @@ def softmax(x):
     return np.exp(x) / np.sum(np.exp(x), axis=0)
 
 def stable_softmax(x):
-    z = x - max(x)
-    numerator = np.exp(z)
-    denominator = np.sum(numerator)
-    softmax = numerator / denominator
-
-    return softmax
+    x = np.array(x)  # Convert the list to a numpy array if it isn't already
+    if x.ndim == 1:
+        z = x - np.max(x)  # Subtract the max value to prevent overflow
+    else:
+        z = x - np.max(x, axis=1, keepdims=True)
+    return np.exp(z) / np.sum(np.exp(z), axis=-1, keepdims=True)
 
 class Neuron:
     def __init__(self, type: str) -> None:
@@ -109,8 +109,8 @@ class NeuralNetwork:
                     queue.insert(0, i)
                     break
             if n.ready and n.type != "INPUT":
-                n.value = tanh(n.value)
+                n.value = relu(n.value)
 
         # Collect and return the output values, normalized with softmax
         output_values = [x.value for x in self.outputs]
-        return softmax(output_values)
+        return stable_softmax(output_values)

@@ -9,6 +9,19 @@ from multiprocessing import Pool, cpu_count
 import pickle
 import random
 import gymnasium as gym
+from gymnasium.wrappers import FlattenObservation
+
+def indice_max_probabilidad(probabilidades):
+# Calcula la distribución de probabilidad acumulativa (CDF)
+    cdf = np.cumsum(probabilidades)
+    
+    # Genera un número aleatorio en el rango [0, 1]
+    aleatorio = np.random.random()
+    
+    # Encuentra el primer índice en la CDF donde el valor acumulado es mayor o igual al número aleatorio generado
+    indice = np.searchsorted(cdf, aleatorio, side='left')
+    
+    return indice
 
 gym.logger.set_level(50)
 
@@ -23,20 +36,17 @@ class NEAT:
         self.best_genome = None
         self.batch_size = 10
         self.genomes = [Genome(inputSize, outputSize) for _ in range(populationSize)]
-        self.env = gym.make('SpaceInvaders-ramDeterministic-v4',render_mode=None)
-
-    def _make_env(self):
-        return gym.make('SpaceInvaders-ramDeterministicv4',render_mode=None)
+        self.env = gym.make('SpaceInvaders-ram-v4',render_mode=None)
 
     def _evaluate_genome(self, genome):
-        env = self.env
+        env = FlattenObservation(self.env)
         state, _ = env.reset()
         score = 0
         done = False
         
         while not done:
             dict_input = {i: int(valor) for i, valor in enumerate(state)}
-            action = np.argmax(genome.network.forward(dict_input))
+            action = indice_max_probabilidad(genome.network.forward(dict_input))
             n_state, reward, terminated, truncated, _ = env.step(action)
             state = n_state
             score += reward
@@ -61,43 +71,49 @@ class NEAT:
         return fitness_values
 
     def train(self, epochs, goal, distance_t, output_file):
+        print(f"Obj: {goal}, episodes: {epochs}\n")
         with open(output_file, "w") as f:
             f.write("epoch;prom_fit;std_dev;best\n")
 
-        best_fit = -np.inf  # Initialize best fitness to negative infinity
+        best_overall = -np.inf  # Initialize best fitness to negative infinity
 
         for episode in range(1, epochs + 1):
+            print("Episode ", episode)
             for genome in self.genomes:
                 genome.network = NeuralNetwork(genome)
 
             fitness_values = self._evaluate_genomes()
 
-            best_of_epoch = Genome(self.input_size,self.output_size)
-            best_of_epoch.fitness = 0
+            best_of_epoch = None
+            best_fitness_of_epoch = -np.inf
 
             for genome, fitness_value in zip(self.genomes, fitness_values):
                 genome.fitness = fitness_value
-                if genome.fitness >= best_of_epoch.fitness:
+                if fitness_value > best_fitness_of_epoch:
                     best_of_epoch = genome
+                    best_fitness_of_epoch = fitness_value
 
             prom = np.mean(fitness_values)
             std_dev = np.std(fitness_values)
-            current_best_fit = max(fitness_values)
+            current_best_fit = best_fitness_of_epoch
 
-            if current_best_fit > best_fit:
-                best_fit = current_best_fit
-                self.best_genome = self.genomes[np.argmax(fitness_values)]  # Save the best genome
+            if current_best_fit > best_overall:
+                best_overall = current_best_fit
+                self.best_genome = best_of_epoch  # Save the best genome
 
             with open(output_file, 'a') as f:
-                f.write(f"{episode};{prom};{std_dev:.3f};{current_best_fit}\n")
+                f.write(f"{str(episode)};{str(prom)};{std_dev:.3f};{str(current_best_fit)}\n")
 
-            print(f"Best fitness in epoch {episode}: {best_fit}")
+            print(f"Best fitness so far: {best_overall}")
 
-            if prom >= goal:
-                self.save_genomes(f"results_{best_fit}")
+            if episode % 20 == 0 and episode != 0:
+                self.save_genomes(f"checkpoint_{episode}")
+            if best_overall >= goal:
+                self.save_genomes(f"results_{best_overall}")
                 break
 
-            self.next_generation(distance_t, 0.10)
+            self.next_generation(distance_t=distance_t, mutation_rate=0.10)
+
 
     def test(self, _input: dict):
         if self.best_genome is not None:
