@@ -15,8 +15,8 @@ if __name__ == '__main__':
     )
     model.train(
         #env=env,
-        epochs=300,
-        goal=800,
-        distance_t=0.13,
-        output_file="fitness_history_1.txt"
+        epochs=200,
+        goal=850,
+        distance_t=2,
+        output_file="stats.txt"
     )

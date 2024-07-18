@@ -50,7 +50,7 @@ class MyReporter(neat.StatisticsReporter):
 
 def eval_genome(genomes, config):
     #start = time.time()
-    env = gym.make('SpaceInvaders-ramDeterministic-v4', render_mode = None)  # Crear el ambiente Space Invaders
+    env = gym.make('SpaceInvaders-ram-v4', render_mode = None)  # Crear el ambiente Space Invaders
     for genome_id, genome in genomes:
         state,_ = env.reset()  # Reiniciar el ambiente
         #print("Genome: ", genome_id)
@@ -64,7 +64,7 @@ def eval_genome(genomes, config):
             #env.render()
             output =  net.activate(state)  # Activar la red neuronal para obtener la acción
             softmaxed = softmax(output)
-            action = indice_max_probabilidad(softmaxed)
+            action = np.argmax(softmaxed)
             n_state, reward, done, truncated, info = env.step(action)  # Ejecutar la acción en el ambiente
             state = n_state
             total_reward += reward  # Acumular el premio
@@ -98,7 +98,7 @@ def train(config_file):
     # Mostrar el mejor genoma
     print('\nBest genome:\n{!s}'.format(winner))
 
-config_path = 'config.txt'
+config_path = 'NEAT_PYTHON/config.txt'
 
 # Entrenar la red neuronal utilizando NEAT
 if __name__ == '__main__':
