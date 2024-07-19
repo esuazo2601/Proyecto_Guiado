@@ -24,9 +24,9 @@ def softmax(x):
     return np.exp(x) / np.sum(np.exp(x), axis=0)
 
 def stable_softmax(x):
-    x = np.array(x)  # Convert the list to a numpy array if it isn't already
+    x = np.array(x)
     if x.ndim == 1:
-        z = x - np.max(x)  # Subtract the max value to prevent overflow
+        z = x - np.max(x) 
     else:
         z = x - np.max(x, axis=1, keepdims=True)
     return np.exp(z) / np.sum(np.exp(z), axis=-1, keepdims=True)
@@ -65,7 +65,6 @@ class NeuralNetwork:
                 node.ready = True
                 self.inputs.append(node)
 
-        # Connect neurons based on genome connections
         for conn in genome.connections.genes.values():
             if not conn.Enabled:
                 continue
@@ -73,7 +72,7 @@ class NeuralNetwork:
             _out = conn.Output
             _weight = conn.Weight
 
-            # Ensure both input and output neurons exist
+            # si no existen los nodos, se crean como HIDDEN
             if _in not in self.neuron:
                 self.neuron[_in] = Neuron("HIDDEN")
             if _out not in self.neuron:
@@ -109,8 +108,8 @@ class NeuralNetwork:
                     queue.insert(0, i)
                     break
             if n.ready and n.type != "INPUT":
-                n.value = relu(n.value)
+                n.value = tanh(n.value)
 
-        # Collect and return the output values, normalized with softmax
+        # Normalizar la salida con el softmax estable para los valores muy grandes generados con RELU por ejemplo
         output_values = [x.value for x in self.outputs]
         return stable_softmax(output_values)

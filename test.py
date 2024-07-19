@@ -25,7 +25,7 @@ model = NEAT(
         C3=3.5,
 )
 
-model.load_genomes("results_990.0")
+model.load_genomes("results_885.0")
 
 print(model.best_genome.fitness)
 print(model.best_genome)
@@ -37,6 +37,8 @@ state, info = env.reset()
 done = False
 truncated = False  # Inicializar la variable truncated
 score = 0
+
+model.visualize_network(model.best_genome,"best 885")
 
 while not done and not truncated:
     state = {i: state[i] for i in range(len(state))}

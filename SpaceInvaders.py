@@ -13,6 +13,7 @@ if __name__ == '__main__':
         C2=2.3,
         C3=3.5,
     )
+    model.load_genomes("checkpoint_40")
     model.train(
         #env=env,
         epochs=200,

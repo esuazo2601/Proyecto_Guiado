@@ -10,6 +10,7 @@ import pickle
 import random
 import gymnasium as gym
 from gymnasium.wrappers import FlattenObservation
+import graphviz
 
 def indice_max_probabilidad(probabilidades):
 # Calcula la distribución de probabilidad acumulativa (CDF)
@@ -36,30 +37,36 @@ class NEAT:
         self.best_genome = None
         self.batch_size = 10
         self.genomes = [Genome(inputSize, outputSize) for _ in range(populationSize)]
-        self.env = gym.make('SpaceInvaders-ram-v4',render_mode=None)
+        self.env = gym.make('SpaceInvaders-ramDeterministic-v4',render_mode=None)
 
+    #Codigo para evaluar cada genoma
     def _evaluate_genome(self, genome):
-        env = FlattenObservation(self.env)
+        env = self.env
         state, _ = env.reset()
         score = 0
         done = False
         
         while not done:
+            #Entrada de la red neuronal
             dict_input = {i: int(valor) for i, valor in enumerate(state)}
-            action = indice_max_probabilidad(genome.network.forward(dict_input))
+            net_out = NeuralNetwork(genome).forward(dict_input)
+            #print(net_out)
+            #Accion de salida
+            action = np.argmax(net_out)
             n_state, reward, terminated, truncated, _ = env.step(action)
             state = n_state
             score += reward
             done = terminated or truncated
 
-        env.close()
         return score
 
+    #Función que evalúa los genomas en "paquetes"
     def _evaluate_genomes_batch(self, genomes_batch):
         with Pool(10) as pool:
                 fitness_values = pool.map(self._evaluate_genome, genomes_batch)
         return fitness_values
 
+    #Función que finalmente se encarga de evaluar a los genomas en los paquetes antes mencionados
     def _evaluate_genomes(self):
         fitness_values = np.zeros(self.population_size)
         for i in range(0, self.population_size, self.batch_size):
@@ -77,8 +84,10 @@ class NEAT:
 
         best_overall = -np.inf  # Initialize best fitness to negative infinity
 
+        #Se entrena en un rango de episodios determinado
         for episode in range(1, epochs + 1):
             print("Episode ", episode)
+            #Por cada genoma se crea una red neuronal
             for genome in self.genomes:
                 genome.network = NeuralNetwork(genome)
 
@@ -93,26 +102,30 @@ class NEAT:
                     best_of_epoch = genome
                     best_fitness_of_epoch = fitness_value
 
+            #Cálculo del promedio, la desviación estándar y el mejor de la generación
             prom = np.mean(fitness_values)
             std_dev = np.std(fitness_values)
             current_best_fit = best_fitness_of_epoch
 
             if current_best_fit > best_overall:
                 best_overall = current_best_fit
-                self.best_genome = best_of_epoch  # Save the best genome
+                self.best_genome = best_of_epoch  # Quedarse con el mejor genoma
 
+            #Escritura en el archivo de stats
             with open(output_file, 'a') as f:
                 f.write(f"{str(episode)};{str(prom)};{std_dev:.3f};{str(current_best_fit)}\n")
 
-            print(f"Best fitness so far: {best_overall}")
+            print(f"Best fitness so far: {best_overall}") 
 
+            #Toma de checkpoints cada 20 episodios o bien cuando se llega al objetivo
             if episode % 20 == 0 and episode != 0:
                 self.save_genomes(f"checkpoint_{episode}")
             if best_overall >= goal:
                 self.save_genomes(f"results_{best_overall}")
                 break
-
-            self.next_generation(distance_t=distance_t, mutation_rate=0.10)
+            
+            #Siguiente generación
+            self.next_generation(distance_t=distance_t, mutation_rate=0.25)
 
 
     def test(self, _input: dict):
@@ -138,17 +151,17 @@ class NEAT:
     def next_generation(self, distance_t: float, mutation_rate: float):
         new_generation = []
 
-        # Determine how many elites to keep (e.g., top 15% of the population)
-        num_elites = max(1, int(self.population_size * 0.15))  # Adjust percentage as needed
+        # Cantidad de elites
+        num_elites = max(1, int(self.population_size * 0.20))  # Ajustar porcentaje
 
-        # Sort genomes by fitness in descending order
+        # Ordenar en orden descendiente de fitness
         sorted_genomes = sorted(self.genomes, key=lambda x: x.fitness, reverse=True)
 
-        # Preserve the best performing genomes (elites)
+        # preservar los mejores para la siguiente generacion
         elites = sorted_genomes[:num_elites]
         new_generation.extend(elites)
 
-        # Mutate a certain percentage of the population
+        # Ejecutar mutaciones
         num_to_mutate = int(self.population_size * mutation_rate)
         genomes_to_mutate = random.sample(sorted_genomes[num_elites:], num_to_mutate)
 
@@ -156,7 +169,7 @@ class NEAT:
             genome.mutate()
             new_generation.append(genome)
 
-        # Generate the rest of the new generation through speciation
+        # Generar el resto mediante cruza
         new_species = Species(distance_t, self.genomes, self.C1, self.C2, self.C3)
         new_generation.extend(new_species.speciation(self.population_size - len(new_generation)))
         self.genomes = new_generation
@@ -200,3 +213,43 @@ class NEAT:
         n = NodeGenes(len(self.all_nodes) + 1)
         self.all_nodes.append(n)
         return n
+    
+
+    def visualize_network(self, genome, filename):
+        output_dir = './network_visualizations'
+        os.makedirs(output_dir, exist_ok=True)
+        
+        filepath = os.path.join(output_dir, filename)
+        
+        dot = graphviz.Digraph()
+        node_positions = {}
+
+        # Add input nodes
+        for i in range(1, self.input_size + 1):
+            node_id = i
+            dot.node(str(node_id), f'Input {node_id}', shape='box', style='filled', color='lightblue')
+            node_positions[node_id] = (0, -i)
+
+        # Add output nodes
+        for i in range(1, self.output_size + 1):
+            node_id = self.input_size + i
+            dot.node(str(node_id), f'Output {node_id}', shape='box', style='filled', color='lightgreen')
+            node_positions[node_id] = (1, -i)
+
+        # Add hidden nodes and connections
+        for key, connection in genome.connections.genes.items():
+            if connection.Enabled:
+                in_node = connection.Input
+                out_node = connection.Output
+
+                if in_node not in node_positions:
+                    node_positions[in_node] = (random.uniform(0.1, 0.9), random.uniform(-self.input_size, self.output_size))
+
+                if out_node not in node_positions:
+                    node_positions[out_node] = (random.uniform(0.1, 0.9), random.uniform(-self.input_size, self.output_size))
+
+                dot.edge(str(in_node), str(out_node), label=f'{connection.Weight:.2f}')
+
+        dot.attr(rankdir='LR')  # This changes the layout to left-to-right instead of top-to-bottom
+        dot.render(filepath, format='png')
+        print(f"Network visualization saved to {filepath}.png")
